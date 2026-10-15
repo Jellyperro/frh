@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>盒模型、框模型、box model</title>
+    <style>
+        body,ul,p,h1,h2,h3,h4,h5,h6{
+            margin: 0;
+            padding: 0;
+        }
+        ul{
+            list-style: none;
+        }
+        .a{
+            width: 500px;
+            height: 300px;
+            border: 2px dotted rgb(4, 255, 54);
+            padding: 70px 60px 560px 40px; /*上 右 左 下*/
+            margin: 40px auto;
+            /* 上下、左右，左右margin为auto时居中 */
+        }
+        /* 盒子的高度：内容的高度+上下边框的高度+上下padding的高度+上下margin的高度 */
+        .b{
+            width: 500px;
+            height: 300px;
+            border: 2px dashed rgb(255, 36, 142);
+            margin: 50px auto 40px;
+            /* 上、左右、下，左右margin为auto时居中 */
+        }
+        .c{
+            width: 500px;
+            height: 300px;
+            border: 2px solid rgb(191, 255, 208);
+            margin: 50px auto 40px;
+        }
+    </style><!-- 盒模型、框模型、box model -->
+</head>
+<body>
+    <div class="a">929傅若涵</div>
+    <div class="b">929傅若涵</div>
+    <div class="c">929傅若涵</div>
+</body>
+</html>

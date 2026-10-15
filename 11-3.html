@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS3 3D动画</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #1a1a2e;
+            padding: 40px 20px;
+            color: #eee;
+            min-height: 100vh;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 8px;
+            letter-spacing: 3px;
+            font-size: 28px;
+        }
+        .Fu_desc {
+            text-align: center;
+            color: #aaa;
+            font-size: 14px;
+            margin-bottom: 40px;
+        }
+        .Fu_section-title {
+            max-width: 1000px;
+            margin: 40px auto 20px;
+            font-size: 18px;
+            font-weight: bold;
+            border-left: 4px solid #e94560;
+            padding-left: 12px;
+            color: #e94560;
+        }
+        .Fu_grid {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+        }
+        .Fu_card {
+            background: #16213e;
+            border: 1px solid #0f3460;
+            border-radius: 12px;
+            padding: 24px;
+            width: 300px;
+            text-align: center;
+        }
+        .Fu_card h3 {
+            font-size: 16px;
+            margin-bottom: 6px;
+            color: #e94560;
+        }
+        .Fu_card .Fu_syntax {
+            font-family: Consolas, monospace;
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 16px;
+        }
+        .Fu_stage {
+            height: 180px;
+            perspective: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+            overflow: hidden;
+        }
+        .Fu_note {
+            font-size: 12px;
+            color: #999;
+            line-height: 1.6;
+        }
+
+        /* 1. 3D旋转立方体 */
+        .Fu_cube-scene {
+            width: 80px;
+            height: 80px;
+            perspective: 400px;
+        }
+        .Fu_cube {
+            width: 80px;
+            height: 80px;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: Fu_spin-cube 4s linear infinite;
+        }
+        .Fu_cube-face {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border: 2px solid #e94560;
+            background: rgba(233, 69, 96, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #e94560;
+            font-weight: bold;
+        }
+        .Fu_cube-face:nth-child(1) { transform: rotateY(0deg) translateZ(40px); }
+        .Fu_cube-face:nth-child(2) { transform: rotateY(90deg) translateZ(40px); }
+        .Fu_cube-face:nth-child(3) { transform: rotateY(180deg) translateZ(40px); }
+        .Fu_cube-face:nth-child(4) { transform: rotateY(270deg) translateZ(40px); }
+        .Fu_cube-face:nth-child(5) { transform: rotateX(90deg) translateZ(40px); }
+        .Fu_cube-face:nth-child(6) { transform: rotateX(-90deg) translateZ(40px); }
+        @keyframes Fu_spin-cube {
+            from { transform: rotateX(0deg) rotateY(0deg); }
+            to   { transform: rotateX(360deg) rotateY(360deg); }
+        }
+
+        /* 2. 翻转卡片 */
+        .Fu_flip-scene {
+            width: 140px;
+            height: 100px;
+            perspective: 600px;
+        }
+        .Fu_flip-card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s;
+            cursor: pointer;
+        }
+        .Fu_flip-scene:hover .Fu_flip-card {
+            transform: rotateY(180deg);
+        }
+        .Fu_flip-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .Fu_flip-front {
+            background: linear-gradient(135deg, #e94560, #c23152);
+            color: #fff;
+        }
+        .Fu_flip-back {
+            background: linear-gradient(135deg, #0f3460, #16213e);
+            color: #e94560;
+            transform: rotateY(180deg);
+            border: 2px solid #e94560;
+        }
+
+        /* 3. 3D球体旋转 */
+        .Fu_sphere-scene {
+            width: 100px;
+            height: 100px;
+            perspective: 500px;
+        }
+        .Fu_sphere {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #ff6b81, #e94560 40%, #9b1b30);
+            box-shadow: inset -8px -8px 20px rgba(0,0,0,0.4), 0 0 30px rgba(233,69,96,0.3);
+            animation: Fu_bounce-3d 2s ease-in-out infinite;
+        }
+        @keyframes Fu_bounce-3d {
+            0%, 100% { transform: translateY(0) rotateX(0deg); }
+            50%      { transform: translateY(-40px) rotateX(180deg); }
+        }
+
+        /* 4. 3D传送门旋转环 */
+        .Fu_ring-scene {
+            width: 120px;
+            height: 120px;
+            perspective: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .Fu_ring {
+            width: 100px;
+            height: 100px;
+            border: 4px solid transparent;
+            border-top-color: #e94560;
+            border-right-color: #0f3460;
+            border-bottom-color: #e94560;
+            border-left-color: #0f3460;
+            border-radius: 50%;
+            animation: Fu_ring-spin 1.5s linear infinite;
+            transform-style: preserve-3d;
+        }
+        @keyframes Fu_ring-spin {
+            from { transform: rotateZ(0deg) rotateX(70deg); }
+            to   { transform: rotateZ(360deg) rotateX(70deg); }
+        }
+
+        /* 5. 3D照片墙 */
+        .Fu_wall-scene {
+            width: 200px;
+            height: 120px;
+            perspective: 500px;
+        }
+        .Fu_wall {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: Fu_wall-rotate 6s ease-in-out infinite;
+        }
+        .Fu_wall-item {
+            position: absolute;
+            width: 60px;
+            height: 80px;
+            border-radius: 4px;
+            border: 2px solid #e94560;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #fff;
+            background: rgba(233,69,96,0.2);
+        }
+        .Fu_wall-item:nth-child(1) { transform: rotateY(0deg)   translateZ(60px); background: rgba(233,69,96,0.3); }
+        .Fu_wall-item:nth-child(2) { transform: rotateY(60deg)  translateZ(60px); background: rgba(15,52,96,0.5); }
+        .Fu_wall-item:nth-child(3) { transform: rotateY(120deg) translateZ(60px); background: rgba(233,69,96,0.3); }
+        .Fu_wall-item:nth-child(4) { transform: rotateY(180deg) translateZ(60px); background: rgba(15,52,96,0.5); }
+        .Fu_wall-item:nth-child(5) { transform: rotateY(240deg) translateZ(60px); background: rgba(233,69,96,0.3); }
+        .Fu_wall-item:nth-child(6) { transform: rotateY(300deg) translateZ(60px); background: rgba(15,52,96,0.5); }
+        @keyframes Fu_wall-rotate {
+            from { transform: rotateX(-10deg) rotateY(0deg); }
+            to   { transform: rotateX(-10deg) rotateY(360deg); }
+        }
+
+        /* 6. 3D文字浮动 */
+        .Fu_text-scene {
+            perspective: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .Fu_3d-text {
+            font-size: 36px;
+            font-weight: bold;
+            color: #e94560;
+            text-shadow:
+                1px 1px 0 #c23152,
+                2px 2px 0 #a02040,
+                3px 3px 0 #801830,
+                4px 4px 0 #601020,
+                5px 5px 10px rgba(0,0,0,0.5);
+            animation: Fu_text-float 3s ease-in-out infinite;
+            transform-style: preserve-3d;
+        }
+        @keyframes Fu_text-float {
+            0%, 100% { transform: rotateX(0deg) rotateY(0deg) translateZ(0); }
+            25%      { transform: rotateX(15deg) rotateY(15deg) translateZ(20px); }
+            50%      { transform: rotateX(0deg) rotateY(0deg) translateZ(40px); }
+            75%      { transform: rotateX(-15deg) rotateY(-15deg) translateZ(20px); }
+        }
+
+        /* 7. 3D加载动画 */
+        .Fu_loader-scene {
+            perspective: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .Fu_loader {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(233,69,96,0.2);
+            border-top-color: #e94560;
+            border-radius: 50%;
+            animation: Fu_loader-spin 0.8s linear infinite;
+        }
+        @keyframes Fu_loader-spin {
+            from { transform: rotateX(70deg) rotateZ(0deg); }
+            to   { transform: rotateX(70deg) rotateZ(360deg); }
+        }
+
+        /* 8. 3D卡片倾斜 */
+        .Fu_tilt-scene {
+            perspective: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .Fu_tilt-card {
+            width: 120px;
+            height: 80px;
+            background: linear-gradient(135deg, #0f3460, #16213e);
+            border: 1px solid #e94560;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #e94560;
+            font-weight: bold;
+            transition: transform 0.3s;
+            transform-style: preserve-3d;
+        }
+        .Fu_tilt-scene:hover .Fu_tilt-card {
+            transform: rotateX(20deg) rotateY(-20deg) translateZ(10px);
+        }
+    </style>
+</head>
+<body>
+    <h2>CSS3 3D 动画</h2>
+    <p class="Fu_desc">使用 transform-style: preserve-3d 与 perspective 实现三维空间动画效果</p>
+
+    <div class="Fu_section-title">3D 旋转立方体</div>
+    <div class="Fu_grid">
+        <div class="Fu_card">
+            <h3>立方体 Cube</h3>
+            <div class="Fu_syntax">transform-style: preserve-3d</div>
+            <div class="Fu_stage">
+                <div class="Fu_cube-scene">
+                    <div class="Fu_cube">
+                        <div class="Fu_cube-face">前</div>
+                        <div class="Fu_cube-face">右</div>
+                        <div class="Fu_cube-face">后</div>
+                        <div class="Fu_cube-face">左</div>
+                        <div class="Fu_cube-face">上</div>
+                        <div class="Fu_cube-face">下</div>
+                    </div>
+                </div>
+            </div>
+            <p class="Fu_note">6个面通过 rotate + translateZ 定位，整体持续旋转。</p>
+        </div>
+    </div>
+
+    <div class="Fu_section-title">3D 翻转卡片</div>
+    <div class="Fu_grid">
+        <div class="Fu_card">
+            <h3>翻转卡片 Flip Card</h3>
+            <div class="Fu-syntax">backface-visibility: hidden</div>
+            <div class="Fu_stage">
+                <div class="Fu_flip-scene">
+                    <div class="Fu_flip-card">
+                        <div class="Fu_flip-face Fu_flip-front">正面</div>
+                        <div class="Fu_flip-face Fu_flip-back">背面</div>
+                    </div>
+                </div>
+            </div>
+            <p class="Fu_note">鼠标悬停时绕Y轴翻转180度，展示背面内容。</p>
+        </div>
+    </div>
+
+    <div class="Fu_section-title">3D 弹跳球体</div>
+    <div class="Fu_grid">
+        <div class="Fu_card">
+            <h3>弹跳球体 Sphere</h3>
+            <div class="Fu-syntax">radial-gradient + rotateX</div>
+            <div class="Fu_stage">
+                <div class="Fu_sphere-scene">
+                    <div class="Fu_sphere"></div>
+                </div>
+            </div>
+            <p class="Fu_note">径向渐变模拟立体光照，动画中同时位移和3D旋转。</p>
+        </div>
+    </div>
+
+    <div class="Fu_section-title">3D 旋转环</div>
+    <div class="Fu_grid">
+        <div class="Fu_card">
+            <h3>旋转环 Ring</h3>
+            <div class="Fu-syntax">rotateX(70deg) + rotateZ</div>
+            <div class="Fu_stage">
+                <div class="Fu_ring-scene">
+                    <div class="Fu_ring"></div>
+                </div>
+            </div>
+            <p class="Fu_note">先绕X轴倾斜70度，再绕Z轴旋转，产生3D轨道效果。</p>
+        </div>
+    </div>
+
+    <div class="Fu_section-title">3D 照片墙</div>
+    <div class="Fu_grid">
+        <div class="Fu_card">
+            <h3>照片墙 Photo Wall</h3>
+            <div class="Fu-syntax">rotateY + translateZ 环形排列</div>
+            <div class="Fu_stage">
+                <div class="Fu_wall-scene">
+                    <div class="Fu_wall">
+                        <div class="Fu_wall-item">1</div>
+                        <div class="Fu_wall-item">2</div>
+                        <div class="Fu_wall-item">3</div>
+                        <div class="Fu_wall-item">4</div>
+                        <div class="Fu_wall-item">5</div>
+                        <div class="Fu_wall-item">6</div>
+                    </div>
+                </div>
+            </div>
+            <p class="Fu_note">6张照片沿Y轴均匀分布在Z轴圆环上，整体缓慢旋转。</p>
+        </div>
+    </div>
+
+    <div class="Fu_section-title">3D 文字浮动</div>
+    <div class="Fu_grid">
+        <div class="Fu_card">
+            <h3>3D 文字 Text</h3>
+            <div class="Fu-syntax">text-shadow + translateZ</div>
+            <div class="Fu_stage">
+                <div class="Fu_text-scene">
+                    <div class="Fu_3d-text">3D</div>
+                </div>
+            </div>
+            <p class="Fu_note">多层文字阴影模拟立体厚度，动画中沿Z轴前后移动。</p>
+        </div>
+    </div>
+
+    <div class="Fu_section-title">3D 加载动画</div>
+    <div class="Fu_grid">
+        <div class="Fu_card">
+            <h3>3D 加载 Loader</h3>
+            <div class="Fu-syntax">rotateX + rotateZ</div>
+            <div class="Fu_stage">
+                <div class="Fu_loader-scene">
+                    <div class="Fu_loader"></div>
+                </div>
+            </div>
+            <p class="Fu_note">倾斜视角下的旋转加载圈，呈现3D空间感。</p>
+        </div>
+    </div>
+
+    <div class="Fu_section-title">3D 卡片倾斜（悬停交互）</div>
+    <div class="Fu_grid">
+        <div class="Fu_card">
+            <h3>卡片倾斜 Tilt</h3>
+            <div class="Fu-syntax">hover: rotateX + rotateY</div>
+            <div class="Fu_stage">
+                <div class="Fu_tilt-scene">
+                    <div class="Fu_tilt-card">HOVER</div>
+                </div>
+            </div>
+            <p class="Fu_note">鼠标悬停时卡片沿X/Y轴倾斜并向前突出。</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>傅若涵 · 个人主页</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 300% 300%;
+            animation: gradientShift 12s ease infinite;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        /* 漂浮的光斑装饰 */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.45;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .orb-1 {
+            width: 300px;
+            height: 300px;
+            background: #ff9a9e;
+            top: -80px;
+            left: -60px;
+            animation: float 9s ease-in-out infinite;
+        }
+
+        .orb-2 {
+            width: 260px;
+            height: 260px;
+            background: #a18cd1;
+            bottom: -70px;
+            right: -50px;
+            animation: float 11s ease-in-out infinite reverse;
+        }
+
+        .orb-3 {
+            width: 200px;
+            height: 200px;
+            background: #fbc2eb;
+            bottom: 15%;
+            left: 10%;
+            animation: float 13s ease-in-out infinite 2s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, -25px) scale(1.15); }
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 主卡片 */
+        .card {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 420px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 24px;
+            padding: 48px 40px;
+            text-align: center;
+            color: #fff;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+            animation: cardIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform: translateY(40px) scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* 头像 */
+        .avatar {
+            width: 110px;
+            height: 110px;
+            margin: 0 auto 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffd1ff, #a8edea);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 44px;
+            font-weight: 700;
+            color: #764ba2;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            border: 4px solid rgba(255, 255, 255, 0.6);
+            animation: avatarPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes avatarPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .greeting {
+            font-size: 15px;
+            letter-spacing: 6px;
+            color: rgba(255, 255, 255, 0.75);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            font-size: 42px;
+            font-weight: 800;
+            letter-spacing: 8px;
+            margin-bottom: 14px;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .divider {
+            width: 64px;
+            height: 3px;
+            margin: 0 auto 18px;
+            border-radius: 2px;
+            background: linear-gradient(90deg, #ffd1ff, #a8edea);
+        }
+
+        .subtitle {
+            font-size: 15px;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 30px;
+        }
+
+        /* 按钮 */
+        .btn {
+            display: inline-block;
+            padding: 13px 34px;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #764ba2;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 14px 35px rgba(0, 0, 0, 0.3);
+            background: #fff;
+        }
+
+        .btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        /* 底部小字 */
+        .footer {
+            margin-top: 34px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.55);
+            letter-spacing: 1px;
+        }
+
+        /* 星空粒子 */
+        .particle {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.7);
+            z-index: 0;
+            animation: twinkle 4s ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.15; transform: translateY(0); }
+            50% { opacity: 0.9; transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景光斑 -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <!-- 主卡片 -->
+    <div class="card">
+        <div class="avatar">傅</div>
+        <p class="greeting">Welcome</p>
+        <h1>傅若涵</h1>
+        <div class="divider"></div>
+        <p class="subtitle">心怀热爱，奔赴山海<br>愿你每一天都闪闪发光</p>
+        <a class="btn" href="mailto:example@example.com">联系我</a>
+        <p class="footer">929 · 与你相遇的第 N 天</p>
+    </div>
+
+    <script>
+        // 生成漂浮的星空粒子
+        const particleCount = 24;
+        for (let i = 0; i < particleCount; i++) {
+            const p = document.createElement("div");
+            p.className = "particle";
+            p.style.left = Math.random() * 100 + "vw";
+            p.style.top = Math.random() * 100 + "vh";
+            p.style.animationDelay = Math.random() * 4 + "s";
+            p.style.animationDuration = (3 + Math.random() * 4) + "s";
+            document.body.appendChild(p);
+        }
+    </script>
+</body>
+</html>

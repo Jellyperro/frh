@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>929</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: #fff;    /* 页面背景：白色，同图片 */
+            padding: 30px 40px;
+        }
+        h2 {
+            color: #333;               /* 标题：黑色，同图片 */
+            text-align: center;
+            letter-spacing: 4px;
+            margin-bottom: 32px;
+        }
+        .flex {
+            display:flex;
+            /* 容器，它的子元素在一行显示 */
+            flex-wrap: wrap; /* 子元素换行 */
+            justify-content: space-between; /* 子元素水平对齐 */
+            background-color: #ffd6e7; /* flex底色：粉色 */
+            padding: 20px;
+        }
+        .flex li{
+            width: 20%;
+            height: 300px;
+            border: 1px solid #ccc;    /* 外框：浅灰细边，同图片 */
+            padding: 15px;             /* box与外框之间留出间距 */
+            /* float:left; */
+            list-style: none;
+            display: flex;
+        }
+        .box{
+            width: 70px;
+            height: 70px;
+            background-color: #4caf50; /* 方块：绿色 */
+            border-radius: 0;          /* 方块保持直角，不做圆角 */
+        }
+        .flex li:nth-child(1){
+            /* 水平垂直对齐（第一个盒子，保持不变） */
+            align-items: center;
+            justify-content: center;
+        }
+        .flex li:nth-child(2){
+            /* 第二块：两个box上下排列，中间留出距离 */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+        }
+        .flex li:nth-child(3){
+            /* 第三块：四个box换行排列，上面2个下面2个 */
+            flex-wrap: wrap;
+            align-items: center;
+            align-content: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .flex li:nth-child(3) .box{
+            /* 每个box占半行宽，保证每行正好2个 */
+            flex: 0 0 calc(50% - 10px);
+            width: auto;
+        }
+        .flex li:nth-child(4){
+            /* 第四块：三个box，上面1个宽的，下面2个 */
+            flex-wrap: wrap;
+            align-items: center;
+            align-content: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .flex li:nth-child(4) .box:first-child{
+            /* 第一个box横向占满第一行 */
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h2>傅若涵的flex</h2>
+    <ul class="flex">
+        <li>
+            <div class="box"></div>
+        </li>
+        <li> 
+            <div class="box"></div>
+            <div class="box"></div>
+        </li>
+        <li>
+            <div class="box"></div>
+            <div class="box"></div>
+            <div class="box"></div>
+            <div class="box"></div>
+        </li>
+        <li>
+            <div class="box"></div>
+            <div class="box"></div>
+            <div class="box"></div>
+        </li>
+    </ul>
+</body>
+</html>

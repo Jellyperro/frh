@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web前端长度单位</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #f5f5f5;
+            padding: 40px 20px;
+            color: #333;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 12px;
+            letter-spacing: 2px;
+        }
+        .desc {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 36px;
+        }
+        .section-title {
+            max-width: 960px;
+            margin: 36px auto 16px;
+            font-size: 18px;
+            font-weight: bold;
+            border-left: 4px solid #039;
+            padding-left: 10px;
+        }
+        .grid {
+            max-width: 960px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .card {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            width: calc(33.333% - 14px);
+        }
+        .card h3 {
+            font-size: 14px;
+            color: #039;
+            margin-bottom: 4px;
+        }
+        .card .syntax {
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 12px;
+        }
+        .demo-area {
+            height: 80px;
+            background: #f9f9f9;
+            border: 1px dashed #ccc;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        .demo-box {
+            background: #039;
+            border-radius: 3px;
+            opacity: 0.85;
+        }
+        .note {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* px */
+        .px-demo { width: 100px; height: 40px; }
+        /* em — 相对自身字体大小 */
+        .em-card { font-size: 16px; }
+        .em-demo { width: 10em; height: 2.5em; }
+        /* rem — 相对根元素字体大小 */
+        .rem-demo { width: 6rem; height: 2.5rem; }
+        /* % — 相对父元素 */
+        .pct-demo { width: 60%; height: 50%; }
+        /* vw / vh */
+        .vw-demo { width: 20vw; height: 40px; }
+        .vh-demo { width: 100px; height: 15vh; }
+        /* vmin / vmax */
+        .vmin-demo { width: 25vmin; height: 40px; }
+        .vmax-demo { width: 100px; height: 12vmax; }
+        /* ch — 相对"0"字符宽度 */
+        .ch-demo { width: 20ch; height: 40px; }
+        /* calc */
+        .calc-demo { width: calc(100% - 40px); height: 40px; }
+        /* pt / cm / mm / in */
+        .pt-demo { width: 72pt; height: 30px; }
+        .cm-demo { width: 2.54cm; height: 30px; }
+        .mm-demo { width: 25.4mm; height: 30px; }
+        .in-demo { width: 1in; height: 30px; }
+
+        @media (max-width: 768px) {
+            .card { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <h2>Web 前端长度单位</h2>
+    <p class="desc">CSS 中的长度单位分为绝对单位和相对单位，下图展示各单位的实际效果</p>
+
+    <div class="section-title">绝对单位（固定尺寸）</div>
+    <div class="grid">
+        <div class="card">
+            <h3>px（像素）</h3>
+            <div class="syntax">width: 100px</div>
+            <div class="demo-area"><div class="demo-box px-demo"></div></div>
+            <p class="note">最常用的单位，1px 对应屏幕上的一个物理像素点（CSS 逻辑像素）。</p>
+        </div>
+        <div class="card">
+            <h3>pt（点）</h3>
+            <div class="syntax">width: 72pt</div>
+            <div class="demo-area"><div class="demo-box pt-demo"></div></div>
+            <p class="note">印刷单位，1pt = 1/72 英寸。屏幕显示中较少使用。</p>
+        </div>
+        <div class="card">
+            <h3>cm / mm / in</h3>
+            <div class="syntax">width: 2.54cm / 25.4mm / 1in</div>
+            <div class="demo-area"><div class="demo-box cm-demo"></div></div>
+            <p class="note">物理长度单位。1in = 2.54cm = 25.4mm = 72pt = 96px。主要用于打印样式。</p>
+        </div>
+    </div>
+
+    <div class="section-title">相对单位（相对于其他值）</div>
+    <div class="grid">
+        <div class="card em-card">
+            <h3>em</h3>
+            <div class="syntax">width: 10em</div>
+            <div class="demo-area"><div class="demo-box em-demo"></div></div>
+            <p class="note">相对于<strong>自身</strong> font-size 的长度。此处 font-size=16px，所以 10em = 160px。</p>
+        </div>
+        <div class="card">
+            <h3>rem</h3>
+            <div class="syntax">width: 6rem</div>
+            <div class="demo-area"><div class="demo-box rem-demo"></div></div>
+            <p class="note">相对于<strong>根元素</strong>（html）的 font-size。默认 1rem = 16px，不受嵌套影响。</p>
+        </div>
+        <div class="card">
+            <h3>%（百分比）</h3>
+            <div class="syntax">width: 60%; height: 50%</div>
+            <div class="demo-area"><div class="demo-box pct-demo"></div></div>
+            <p class="note">相对于<strong>父元素</strong>对应属性的值。此处父容器宽度约 282px，高度 80px。</p>
+        </div>
+        <div class="card">
+            <h3>vw（视口宽度）</h3>
+            <div class="syntax">width: 20vw</div>
+            <div class="demo-area"><div class="demo-box vw-demo"></div></div>
+            <p class="note">1vw = 视口宽度的 1%。窗口越宽，元素越大。</p>
+        </div>
+        <div class="card">
+            <h3>vh（视口高度）</h3>
+            <div class="syntax">height: 15vh</div>
+            <div class="demo-area"><div class="demo-box vh-demo"></div></div>
+            <p class="note">1vh = 视口高度的 1%。窗口越高，元素越高。</p>
+        </div>
+        <div class="card">
+            <h3>vmin / vmax</h3>
+            <div class="syntax">25vmin / 12vmax</div>
+            <div class="demo-area"><div class="demo-box vmin-demo"></div></div>
+            <p class="note">vmin = vw 与 vh 中较小者的 1%；vmax = 较大者的 1%。</p>
+        </div>
+        <div class="card">
+            <h3>ch</h3>
+            <div class="syntax">width: 20ch</div>
+            <div class="demo-area"><div class="demo-box ch-demo"></div></div>
+            <p class="note">相对于当前字体中 "0" 字符的宽度。常用于限制文本行宽（如 60-75ch）。</p>
+        </div>
+        <div class="card">
+            <h3>calc() 计算</h3>
+            <div class="syntax">width: calc(100% - 40px)</div>
+            <div class="demo-area"><div class="demo-box calc-demo"></div></div>
+            <p class="note">混合不同单位进行计算，如百分比与像素相减，实现弹性布局。</p>
+        </div>
+        <div class="card">
+            <h3>fr（Grid 分数）</h3>
+            <div class="syntax">grid-template-columns: 1fr 2fr</div>
+            <div class="demo-area" style="display:grid;grid-template-columns:1fr 2fr;gap:6px;padding:6px;">
+                <div style="background:#039;border-radius:3px;opacity:.85;"></div>
+                <div style="background:#e91e63;border-radius:3px;opacity:.85;"></div>
+            </div>
+            <p class="note">Grid 布局专用。1fr 表示占据 1 份可用空间，2fr 占 2 份。</p>
+        </div>
+    </div>
+
+    <div class="section-title">使用场景建议</div>
+    <div class="grid">
+        <div class="card" style="width:100%;">
+            <p class="note" style="font-size:14px;line-height:2;">
+                <strong>px</strong> — 边框、阴影、固定尺寸元素。<br>
+                <strong>rem</strong> — 字体大小、间距，便于全局缩放和无障碍适配。<br>
+                <strong>em</strong> — 相对于当前组件的间距（如按钮 padding），随组件字体缩放。<br>
+                <strong>%</strong> — 响应式布局中的弹性宽度。<br>
+                <strong>vw / vh</strong> — 全屏背景、大标题等与视口联动的元素。<br>
+                <strong>ch</strong> — 控制文本阅读宽度，提升可读性。<br>
+                <strong>fr</strong> — CSS Grid 中的比例分配。
+            </p>
+        </div>
+    </div>
+</body>
+</html>

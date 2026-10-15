@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D 梦幻光影画廊</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #0a0a1a;
+            color: #e0e0f0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .Fu_header {
+            text-align: center;
+            padding: 60px 20px 30px;
+        }
+        .Fu_header h1 {
+            font-size: 42px;
+            font-weight: 300;
+            letter-spacing: 12px;
+            background: linear-gradient(135deg, #a78bfa, #f472b6, #fb923c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 16px;
+        }
+        .Fu_header p {
+            color: #6b7280;
+            font-size: 14px;
+            letter-spacing: 4px;
+        }
+
+        /* ===== 3D 旋转画廊 ===== */
+        .Fu_carousel-section {
+            padding: 40px 0 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .Fu_carousel-title {
+            font-size: 18px;
+            letter-spacing: 6px;
+            color: #9ca3af;
+            margin-bottom: 40px;
+        }
+        .Fu_carousel-scene {
+            width: 260px;
+            height: 180px;
+            perspective: 800px;
+        }
+        .Fu_carousel {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: Fu_carousel-spin 16s linear infinite;
+        }
+        .Fu_carousel:hover {
+            animation-play-state: paused;
+        }
+        .Fu_carousel-item {
+            position: absolute;
+            width: 200px;
+            height: 140px;
+            left: 30px;
+            top: 20px;
+            border-radius: 8px;
+            border: 2px solid rgba(167, 139, 250, 0.4);
+            display: flex;
+            align-items: flex-end;
+            padding: 12px;
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: rgba(255,255,255,0.85);
+            text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+        .Fu_carousel-item:nth-child(1) {
+            background: linear-gradient(135deg, #1e1b4b, #4c1d95, #7c3aed);
+            transform: rotateY(0deg) translateZ(280px);
+        }
+        .Fu_carousel-item:nth-child(2) {
+            background: linear-gradient(135deg, #0c4a6e, #0369a1, #38bdf8);
+            transform: rotateY(45deg) translateZ(280px);
+        }
+        .Fu_carousel-item:nth-child(3) {
+            background: linear-gradient(135deg, #500724, #9d174d, #ec4899);
+            transform: rotateY(90deg) translateZ(280px);
+        }
+        .Fu_carousel-item:nth-child(4) {
+            background: linear-gradient(135deg, #064e3b, #047857, #34d399);
+            transform: rotateY(135deg) translateZ(280px);
+        }
+        .Fu_carousel-item:nth-child(5) {
+            background: linear-gradient(135deg, #78350f, #b45309, #fbbf24);
+            transform: rotateY(180deg) translateZ(280px);
+        }
+        .Fu_carousel-item:nth-child(6) {
+            background: linear-gradient(135deg, #312e81, #6366f1, #a5b4fc);
+            transform: rotateY(225deg) translateZ(280px);
+        }
+        .Fu_carousel-item:nth-child(7) {
+            background: linear-gradient(135deg, #7f1d1d, #dc2626, #fca5a5);
+            transform: rotateY(270deg) translateZ(280px);
+        }
+        .Fu_carousel-item:nth-child(8) {
+            background: linear-gradient(135deg, #14532d, #16a34a, #86efac);
+            transform: rotateY(315deg) translateZ(280px);
+        }
+        @keyframes Fu_carousel-spin {
+            from { transform: rotateX(-8deg) rotateY(0deg); }
+            to   { transform: rotateX(-8deg) rotateY(360deg); }
+        }
+
+        /* ===== 3D 透视画廊墙 ===== */
+        .Fu_gallery-section {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+        .Fu_gallery-title {
+            text-align: center;
+            font-size: 18px;
+            letter-spacing: 6px;
+            color: #9ca3af;
+            margin-bottom: 50px;
+        }
+        .Fu_gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            perspective: 1000px;
+        }
+        .Fu_frame {
+            position: relative;
+            height: 280px;
+            border-radius: 12px;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        .Fu_frame:hover {
+            transform: rotateY(8deg) rotateX(-4deg) translateZ(20px);
+            z-index: 10;
+        }
+        .Fu_frame-inner {
+            position: absolute;
+            inset: 10px;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+        .Fu_frame-label {
+            font-size: 13px;
+            letter-spacing: 3px;
+            color: rgba(255,255,255,0.9);
+            text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+            margin-bottom: 4px;
+        }
+        .Fu_frame-sub {
+            font-size: 10px;
+            color: rgba(255,255,255,0.6);
+            letter-spacing: 1px;
+        }
+
+        /* 画作1：星云 */
+        .Fu_art-nebula {
+            background: radial-gradient(ellipse at 30% 40%, #7c3aed 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 60%, #ec4899 0%, transparent 50%),
+                        radial-gradient(ellipse at 50% 80%, #3b82f6 0%, transparent 40%),
+                        #0f0a2e;
+        }
+        .Fu_art-nebula::before {
+            content: '';
+            position: absolute;
+            width: 3px; height: 3px;
+            background: #fff;
+            border-radius: 50%;
+            top: 20%; left: 30%;
+            box-shadow: 15px 20px 0 #fff, -10px 40px 0 #fff, 40px 10px 0 #fff,
+                        60px 50px 0 #fff, 25px 60px 0 #fff, 50px 30px 0 #fff,
+                        -20px 15px 0 #fff, 70px 20px 0 #fff, 10px 70px 0 #fff;
+            opacity: 0.8;
+        }
+
+        /* 画作2：日落 */
+        .Fu_art-sunset {
+            background: linear-gradient(180deg, #1e1b4b 0%, #7c2d12 40%, #ea580c 60%, #fbbf24 80%, #fde68a 100%);
+        }
+        .Fu_art-sunset::before {
+            content: '';
+            position: absolute;
+            width: 60px; height: 60px;
+            background: radial-gradient(circle, #fef3c7, #fbbf24);
+            border-radius: 50%;
+            bottom: 30%;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 40px rgba(251, 191, 36, 0.6);
+        }
+        .Fu_art-sunset::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0; right: 0;
+            height: 35%;
+            background: linear-gradient(180deg, transparent, #1c1917);
+            clip-path: polygon(0 60%, 8% 40%, 15% 55%, 25% 30%, 35% 50%, 45% 35%, 55% 45%, 65% 25%, 75% 40%, 85% 30%, 95% 50%, 100% 40%, 100% 100%, 0 100%);
+        }
+
+        /* 画作3：深海 */
+        .Fu_art-ocean {
+            background: linear-gradient(180deg, #0c4a6e 0%, #0e7490 30%, #0891b2 60%, #22d3ee 100%);
+        }
+        .Fu_art-ocean::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 30px 15px at 30% 70%, rgba(255,255,255,0.15), transparent),
+                radial-gradient(ellipse 25px 12px at 60% 80%, rgba(255,255,255,0.1), transparent),
+                radial-gradient(ellipse 20px 10px at 80% 65%, rgba(255,255,255,0.12), transparent),
+                radial-gradient(ellipse 35px 18px at 15% 85%, rgba(255,255,255,0.08), transparent);
+        }
+        .Fu_art-ocean::after {
+            content: '';
+            position: absolute;
+            width: 40px; height: 40px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            top: 25%; left: 55%;
+            box-shadow: 15px 10px 0 -8px rgba(255,255,255,0.2),
+                        -10px 20px 0 -12px rgba(255,255,255,0.15),
+                        5px -15px 0 -6px rgba(255,255,255,0.25);
+        }
+
+        /* 画作4：极光 */
+        .Fu_art-aurora {
+            background: linear-gradient(180deg, #020617 0%, #0f172a 50%, #1e293b 100%);
+        }
+        .Fu_art-aurora::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80px 200px at 30% 0%, rgba(52, 211, 153, 0.4), transparent 70%),
+                radial-gradient(ellipse 60px 180px at 55% 0%, rgba(96, 165, 250, 0.3), transparent 70%),
+                radial-gradient(ellipse 70px 160px at 75% 0%, rgba(167, 139, 250, 0.35), transparent 70%);
+            filter: blur(4px);
+        }
+        .Fu_art-aurora::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 30%;
+            background: linear-gradient(180deg, transparent, #052e16);
+            clip-path: polygon(0 50%, 10% 30%, 20% 45%, 30% 25%, 40% 40%, 50% 20%, 60% 35%, 70% 15%, 80% 30%, 90% 20%, 100% 35%, 100% 100%, 0 100%);
+        }
+
+        /* 画作5：樱花 */
+        .Fu_art-sakura {
+            background: linear-gradient(180deg, #fdf2f8 0%, #fce7f3 50%, #fbcfe8 100%);
+        }
+        .Fu_art-sakura::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle 25px at 25% 35%, #f472b6 40%, transparent 41%),
+                radial-gradient(circle 20px at 60% 25%, #ec4899 40%, transparent 41%),
+                radial-gradient(circle 30px at 75% 55%, #f9a8d4 40%, transparent 41%),
+                radial-gradient(circle 22px at 40% 65%, #f472b6 40%, transparent 41%),
+                radial-gradient(circle 18px at 15% 70%, #fbcfe8 40%, transparent 41%),
+                radial-gradient(circle 24px at 55% 80%, #ec4899 40%, transparent 41%);
+        }
+        .Fu_art-sakura::after {
+            content: '';
+            position: absolute;
+            bottom: -10px; left: -10px;
+            width: 120%; height: 40px;
+            background: linear-gradient(180deg, transparent, rgba(190, 24, 93, 0.15));
+            border-radius: 50%;
+        }
+
+        /* 画作6：赛博城市 */
+        .Fu_art-cyber {
+            background: linear-gradient(180deg, #0f0a2e 0%, #1a0533 100%);
+        }
+        .Fu_art-cyber::before {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 70%;
+            background:
+                linear-gradient(90deg, transparent 5%, #2e1065 5%, #2e1065 12%, transparent 12%),
+                linear-gradient(90deg, transparent 15%, #4c1d95 15%, #4c1d95 25%, transparent 25%),
+                linear-gradient(90deg, transparent 28%, #5b21b6 28%, #5b21b6 35%, transparent 35%),
+                linear-gradient(90deg, transparent 38%, #6d28d9 38%, #6d28d9 48%, transparent 48%),
+                linear-gradient(90deg, transparent 52%, #4c1d95 52%, #4c1d95 60%, transparent 60%),
+                linear-gradient(90deg, transparent 63%, #7c3aed 63%, #7c3aed 72%, transparent 72%),
+                linear-gradient(90deg, transparent 75%, #5b21b6 75%, #5b21b6 82%, transparent 82%),
+                linear-gradient(90deg, transparent 85%, #6d28d9 85%, #6d28d9 95%, transparent 95%);
+            clip-path: polygon(0 100%, 0 60%, 5% 60%, 5% 40%, 12% 40%, 12% 55%, 15% 55%, 15% 30%, 25% 30%, 25% 50%, 28% 50%, 28% 20%, 35% 20%, 35% 45%, 38% 45%, 38% 35%, 48% 35%, 48% 55%, 52% 55%, 52% 25%, 60% 25%, 60% 45%, 63% 45%, 63% 15%, 72% 15%, 72% 50%, 75% 50%, 75% 35%, 82% 35%, 82% 60%, 85% 60%, 85% 45%, 95% 45%, 95% 55%, 100% 55%, 100% 100%);
+        }
+        .Fu_art-cyber::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 40%;
+            background:
+                radial-gradient(circle 2px at 20% 30%, #fbbf24, transparent),
+                radial-gradient(circle 2px at 35% 50%, #fbbf24, transparent),
+                radial-gradient(circle 2px at 50% 25%, #fbbf24, transparent),
+                radial-gradient(circle 2px at 65% 45%, #fbbf24, transparent),
+                radial-gradient(circle 2px at 80% 35%, #fbbf24, transparent),
+                radial-gradient(circle 2px at 90% 55%, #fbbf24, transparent),
+                radial-gradient(circle 2px at 15% 60%, #f472b6, transparent),
+                radial-gradient(circle 2px at 45% 40%, #38bdf8, transparent),
+                radial-gradient(circle 2px at 70% 20%, #fbbf24, transparent),
+                radial-gradient(circle 2px at 55% 65%, #f472b6, transparent);
+        }
+
+        /* 画框光影效果 */
+        .Fu_frame-shadow {
+            position: absolute;
+            inset: -4px;
+            border-radius: 14px;
+            border: 1px solid rgba(167, 139, 250, 0.15);
+            transform: translateZ(-1px);
+            pointer-events: none;
+        }
+
+        /* ===== 3D 翻转信息卡 ===== */
+        .Fu_flip-section {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+        .Fu_flip-title {
+            text-align: center;
+            font-size: 18px;
+            letter-spacing: 6px;
+            color: #9ca3af;
+            margin-bottom: 50px;
+        }
+        .Fu_flip-grid {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        .Fu_flip-card {
+            width: 180px;
+            height: 240px;
+            perspective: 600px;
+            cursor: pointer;
+        }
+        .Fu_flip-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .Fu_flip-card:hover .Fu_flip-inner {
+            transform: rotateY(180deg);
+        }
+        .Fu_flip-face {
+            position: absolute;
+            inset: 0;
+            backface-visibility: hidden;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+        .Fu_flip-front {
+            border: 1px solid rgba(167, 139, 250, 0.3);
+            background: rgba(167, 139, 250, 0.05);
+        }
+        .Fu_flip-front .Fu_flip-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        .Fu_flip-front .Fu_flip-name {
+            font-size: 16px;
+            color: #c4b5fd;
+            letter-spacing: 3px;
+        }
+        .Fu_flip-back {
+            background: linear-gradient(135deg, #4c1d95, #7c3aed);
+            transform: rotateY(180deg);
+            border: 1px solid rgba(167, 139, 250, 0.5);
+        }
+        .Fu_flip-back h4 {
+            font-size: 14px;
+            color: #e9d5ff;
+            margin-bottom: 8px;
+        }
+        .Fu_flip-back p {
+            font-size: 12px;
+            color: rgba(255,255,255,0.75);
+            line-height: 1.6;
+        }
+
+        /* ===== 3D 视差地板 ===== */
+        .Fu_floor-scene {
+            height: 200px;
+            perspective: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        .Fu_floor {
+            width: 200%;
+            height: 200%;
+            background:
+                repeating-linear-gradient(90deg, rgba(167, 139, 250, 0.06) 0 1px, transparent 1px 60px),
+                repeating-linear-gradient(0deg, rgba(167, 139, 250, 0.06) 0 1px, transparent 1px 60px);
+            transform: rotateX(75deg);
+            animation: Fu_floor-move 3s linear infinite;
+        }
+        @keyframes Fu_floor-move {
+            from { background-position: 0 0, 0 0; }
+            to   { background-position: 0 0, 0 60px; }
+        }
+
+        @media (max-width: 768px) {
+            .Fu_gallery-grid {
+                grid-template-columns: 1fr;
+            }
+            .Fu_header h1 {
+                font-size: 28px;
+                letter-spacing: 6px;
+            }
+            .Fu_carousel-scene {
+                transform: scale(0.8);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="Fu_header">
+        <h1>梦幻光影画廊</h1>
+        <p>DREAM LIGHT GALLERY · 3D CSS ART</p>
+    </div>
+
+    <div class="Fu_carousel-section">
+        <div class="Fu_carousel-title">旋 转 画 廊</div>
+        <div class="Fu_carousel-scene">
+            <div class="Fu_carousel">
+                <div class="Fu_carousel-item">星 云</div>
+                <div class="Fu_carousel-item">日 落</div>
+                <div class="Fu_carousel-item">深 海</div>
+                <div class="Fu_carousel-item">极 光</div>
+                <div class="Fu_carousel-item">樱 花</div>
+                <div class="Fu_carousel-item">赛 博</div>
+                <div class="Fu_carousel-item">梦 境</div>
+                <div class="Fu_carousel-item">时 空</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="Fu_gallery-section">
+        <div class="Fu_gallery-title">透 视 画 廊 墙</div>
+        <div class="Fu_gallery-grid">
+            <div class="Fu_frame">
+                <div class="Fu_frame-inner Fu_art-nebula">
+                    <div class="Fu_frame-label">星云漫步</div>
+                    <div class="Fu_frame-sub">NEBULA WALK</div>
+                </div>
+                <div class="Fu_frame-shadow"></div>
+            </div>
+            <div class="Fu_frame">
+                <div class="Fu_frame-inner Fu_art-sunset">
+                    <div class="Fu_frame-label">落日余晖</div>
+                    <div class="Fu_frame-sub">SUNSET GLOW</div>
+                </div>
+                <div class="Fu_frame-shadow"></div>
+            </div>
+            <div class="Fu_frame">
+                <div class="Fu_frame-inner Fu_art-ocean">
+                    <div class="Fu_frame-label">深海幽蓝</div>
+                    <div class="Fu_frame-sub">DEEP OCEAN</div>
+                </div>
+                <div class="Fu_frame-shadow"></div>
+            </div>
+            <div class="Fu_frame">
+                <div class="Fu_frame-inner Fu_art-aurora">
+                    <div class="Fu_frame-label">极光之舞</div>
+                    <div class="Fu_frame-sub">AURORA DANCE</div>
+                </div>
+                <div class="Fu_frame-shadow"></div>
+            </div>
+            <div class="Fu_frame">
+                <div class="Fu_frame-inner Fu_art-sakura">
+                    <div class="Fu_frame-label">樱花物语</div>
+                    <div class="Fu_frame-sub">SAKURA STORY</div>
+                </div>
+                <div class="Fu_frame-shadow"></div>
+            </div>
+            <div class="Fu_frame">
+                <div class="Fu_frame-inner Fu_art-cyber">
+                    <div class="Fu_frame-label">赛博朋克</div>
+                    <div class="Fu_frame-sub">CYBER CITY</div>
+                </div>
+                <div class="Fu_frame-shadow"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="Fu_flip-section">
+        <div class="Fu_flip-title">翻 转 画 作 卡</div>
+        <div class="Fu_flip-grid">
+            <div class="Fu_flip-card">
+                <div class="Fu_flip-inner">
+                    <div class="Fu_flip-face Fu_flip-front">
+                        <div class="Fu_flip-icon">🌌</div>
+                        <div class="Fu_flip-name">星 云</div>
+                    </div>
+                    <div class="Fu_flip-face Fu_flip-back">
+                        <h4>星云漫步</h4>
+                        <p>紫色与粉色交织的宇宙尘埃，在深空中绽放出梦幻般的光芒。</p>
+                    </div>
+                </div>
+            </div>
+            <div class="Fu_flip-card">
+                <div class="Fu_flip-inner">
+                    <div class="Fu_flip-face Fu_flip-front">
+                        <div class="Fu_flip-icon">🌅</div>
+                        <div class="Fu_flip-name">日 落</div>
+                    </div>
+                    <div class="Fu_flip-face Fu_flip-back">
+                        <h4>落日余晖</h4>
+                        <p>太阳缓缓沉入地平线，天空被染成金橙渐变的暖色调。</p>
+                    </div>
+                </div>
+            </div>
+            <div class="Fu_flip-card">
+                <div class="Fu_flip-inner">
+                    <div class="Fu_flip-face Fu_flip-front">
+                        <div class="Fu_flip-icon">🌊</div>
+                        <div class="Fu_flip-name">深 海</div>
+                    </div>
+                    <div class="Fu_flip-face Fu_flip-back">
+                        <h4>深海幽蓝</h4>
+                        <p>碧蓝海水中的气泡缓缓上升，阳光穿透水面形成丁达尔效应。</p>
+                    </div>
+                </div>
+            </div>
+            <div class="Fu_flip-card">
+                <div class="Fu_flip-inner">
+                    <div class="Fu_flip-face Fu_flip-front">
+                        <div class="Fu_flip-icon">🌌</div>
+                        <div class="Fu_flip-name">极 光</div>
+                    </div>
+                    <div class="Fu_flip-face Fu_flip-back">
+                        <h4>极光之舞</h4>
+                        <p>绿色与紫色光带在极地夜空中舞动，如梦幻帷幕垂落人间。</p>
+                    </div>
+                </div>
+            </div>
+            <div class="Fu_flip-card">
+                <div class="Fu_flip-inner">
+                    <div class="Fu_flip-face Fu_flip-front">
+                        <div class="Fu_flip-icon">🌸</div>
+                        <div class="Fu_flip-name">樱 花</div>
+                    </div>
+                    <div class="Fu_flip-face Fu_flip-back">
+                        <h4>樱花物语</h4>
+                        <p>粉色花瓣随风飘落，温柔了春日里最浪漫的时光。</p>
+                    </div>
+                </div>
+            </div>
+            <div class="Fu_flip-card">
+                <div class="Fu_flip-inner">
+                    <div class="Fu_flip-face Fu_flip-front">
+                        <div class="Fu_flip-icon">🏙️</div>
+                        <div class="Fu_flip-name">赛 博</div>
+                    </div>
+                    <div class="Fu_flip-face Fu_flip-back">
+                        <h4>赛博朋克</h4>
+                        <p>霓虹灯照耀下的未来城市，科技与幻想在此交织碰撞。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="Fu_floor-scene">
+        <div class="Fu_floor"></div>
+    </div>
+
+</body>
+</html>
