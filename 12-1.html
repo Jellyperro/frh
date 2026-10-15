@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS 变量</title>
+    <style>
+        :root {
+            --Fu_main: #039;
+            --Fu_accent: #e91e63;
+            --Fu_text: #333;
+            --Fu_muted: #888;
+            --Fu_bg: #f5f5f5;
+            --Fu_card: #fff;
+            --Fu_gap: 20px;
+            --Fu_radius: 8px;
+            --Fu_shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: var(--Fu_bg);
+            padding: 40px 20px;
+            color: var(--Fu_text);
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .Fu_header {
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .Fu_header h2 {
+            letter-spacing: 2px;
+            color: var(--Fu_main);
+        }
+
+        .Fu_header .Fu_badge {
+            display: inline-block;
+            margin-bottom: 14px;
+            padding: 4px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            letter-spacing: 3px;
+            color: #fff;
+            background: var(--Fu_main);
+        }
+
+        .Fu_desc {
+            text-align: center;
+            color: var(--Fu_muted);
+            font-size: 14px;
+            margin-bottom: 28px;
+        }
+
+        .Fu_toolbar {
+            max-width: 960px;
+            margin: 0 auto 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .Fu_btn {
+            font-family: inherit;
+            font-size: 13px;
+            padding: 9px 18px;
+            border: 1px solid var(--Fu_main);
+            border-radius: var(--Fu_radius);
+            background: var(--Fu_card);
+            color: var(--Fu_main);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .Fu_btn:hover {
+            background: var(--Fu_main);
+            color: #fff;
+        }
+
+        .Fu_section-title {
+            max-width: 960px;
+            margin: 36px auto 16px;
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--Fu_text);
+            border-left: 4px solid var(--Fu_accent);
+            padding-left: 10px;
+        }
+
+        .Fu_grid {
+            max-width: 960px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--Fu_gap);
+        }
+
+        .Fu_card {
+            background: var(--Fu_card);
+            border: 1px solid #ddd;
+            border-radius: var(--Fu_radius);
+            padding: 20px;
+            width: calc(33.333% - 14px);
+            box-shadow: var(--Fu_shadow);
+        }
+
+        .Fu_card h3 {
+            font-size: 14px;
+            color: var(--Fu_main);
+            margin-bottom: 4px;
+        }
+
+        .Fu_card .Fu_syntax {
+            font-family: Consolas, monospace;
+            font-size: 12.5px;
+            color: var(--Fu_muted);
+            margin-bottom: 12px;
+            word-break: break-all;
+        }
+
+        .Fu_stage {
+            min-height: 80px;
+            background: #f9f9f9;
+            border: 1px dashed #ccc;
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .Fu_note {
+            font-size: 12px;
+            color: var(--Fu_muted);
+            line-height: 1.7;
+        }
+
+        .Fu_note code {
+            font-family: Consolas, monospace;
+            color: var(--Fu_accent);
+        }
+
+        /* 1. 全局变量色块 */
+        .Fu_swatch {
+            width: 100%;
+            height: 52px;
+            border-radius: var(--Fu_radius);
+            background: var(--Fu_main);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            letter-spacing: 1px;
+        }
+
+        /* 2. var() 回退值 */
+        .Fu_fallback {
+            width: 100%;
+            height: 52px;
+            border-radius: var(--Fu_radius);
+            background: var(--Fu_not-defined, #9c27b0);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+        }
+
+        /* 3. 局部作用域 */
+        .Fu_local {
+            --Fu_main: #009688;
+            --Fu_accent: #ff9800;
+        }
+
+        .Fu_local .Fu_local-box {
+            width: 100%;
+            height: 52px;
+            border-radius: var(--Fu_radius);
+            background: var(--Fu_main);
+            border-bottom: 6px solid var(--Fu_accent);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+        }
+
+        /* 4. calc + var */
+        .Fu_calc-box {
+            width: calc(100% - 60px);
+            height: 52px;
+            border-radius: var(--Fu_radius);
+            background: linear-gradient(90deg, var(--Fu_main), var(--Fu_accent));
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12.5px;
+            margin: 0 auto;
+        }
+
+        /* 5. 用变量控制尺寸与间距 */
+        .Fu_spacing {
+            display: flex;
+            gap: var(--Fu_gap);
+            width: 100%;
+        }
+
+        .Fu_spacing span {
+            flex: 1;
+            height: 52px;
+            border-radius: var(--Fu_radius);
+            background: var(--Fu_main);
+            opacity: 0.85;
+        }
+
+        /* 6. 主题切换 */
+        body.Fu_dark {
+            --Fu_bg: #1a1a1a;
+            --Fu_card: #2a2a2a;
+            --Fu_text: #eee;
+            --Fu_muted: #aaa;
+            --Fu_main: #4dabf7;
+            --Fu_accent: #ff6b8a;
+        }
+
+        .Fu_theme-box {
+            width: 100%;
+            height: 52px;
+            border-radius: var(--Fu_radius);
+            background: var(--Fu_main);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+        }
+
+        /* 7. 响应式变量 */
+        :root { --Fu_resp: 100%; }
+        @media (max-width: 600px) {
+            :root { --Fu_resp: 50%; }
+        }
+        .Fu_resp-box {
+            width: var(--Fu_resp);
+            height: 52px;
+            border-radius: var(--Fu_radius);
+            background: var(--Fu_accent);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12.5px;
+        }
+
+        /* 8. 变量做动画 */
+        .Fu_anim {
+            --Fu_size: 30px;
+            width: var(--Fu_size);
+            height: var(--Fu_size);
+            border-radius: 50%;
+            background: var(--Fu_main);
+            animation: Fu_pulse 1.4s ease-in-out infinite;
+        }
+
+        @keyframes Fu_pulse {
+            0%, 100% { width: 30px; height: 30px; background: var(--Fu_main); }
+            50%      { width: 64px; height: 64px; background: var(--Fu_accent); }
+        }
+
+        .Fu_footer {
+            max-width: 960px;
+            margin: 44px auto 0;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: var(--Fu_muted);
+        }
+
+        @media (max-width: 768px) {
+            .Fu_card { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="Fu_header">
+        <div class="Fu_badge">929 · 傅若涵</div>
+        <h2>CSS 变量（自定义属性）</h2>
+    </div>
+    <p class="Fu_desc">使用 <code>--变量名</code> 定义、<code>var()</code> 调用，实现统一配色、作用域隔离与动态主题切换</p>
+
+    <div class="Fu_toolbar">
+        <button class="Fu_btn" id="Fu_themeBtn">切换深色 / 浅色主题</button>
+        <button class="Fu_btn" id="Fu_colorBtn">随机主色</button>
+    </div>
+
+    <div class="Fu_section-title">基础用法</div>
+    <div class="Fu_grid">
+        <div class="Fu_card">
+            <h3>全局变量 :root</h3>
+            <div class="Fu_syntax">--Fu_main: #039;</div>
+            <div class="Fu_stage"><div class="Fu_swatch">由 --Fu_main 控制</div></div>
+            <p class="Fu_note">在 <code>:root</code> 中声明，全文档任意元素都能通过 <code>var(--Fu_main)</code> 使用。</p>
+        </div>
+
+        <div class="Fu_card">
+            <h3>var() 回退值</h3>
+            <div class="Fu_syntax">var(--Fu_not-defined, #9c27b0)</div>
+            <div class="Fu_stage"><div class="Fu_fallback">使用回退颜色</div></div>
+            <p class="Fu_note">当变量未定义时，<code>var()</code> 的第二个参数作为回退值生效，避免样式失效。</p>
+        </div>
+
+        <div class="Fu_card">
+            <h3>局部作用域</h3>
+            <div class="Fu_syntax">.Fu_local { --Fu_main: #009688; }</div>
+            <div class="Fu_stage"><div class="Fu_local" style="width:100%;"><div class="Fu_local-box">组件内重新定义</div></div></div>
+            <p class="Fu_note">变量遵循 CSS 层叠规则，在组件内重新声明即可覆盖全局值，只影响该子树。</p>
+        </div>
+    </div>
+
+    <div class="Fu_section-title">进阶用法</div>
+    <div class="Fu_grid">
+        <div class="Fu_card">
+            <h3>calc() 与变量运算</h3>
+            <div class="Fu_syntax">width: calc(100% - 60px)</div>
+            <div class="Fu_stage"><div class="Fu_calc-box">渐变条</div></div>
+            <p class="Fu_note">变量可与 <code>calc()</code> 结合，参与尺寸计算，实现弹性自适应布局。</p>
+        </div>
+
+        <div class="Fu_card">
+            <h3>统一间距</h3>
+            <div class="Fu_syntax">gap: var(--Fu_gap)</div>
+            <div class="Fu_stage"><div class="Fu_spacing"><span></span><span></span><span></span></div></div>
+            <p class="Fu_note">把间距抽成变量，整站改动一处即可，减少重复的魔法数字。</p>
+        </div>
+
+        <div class="Fu_card">
+            <h3>响应式变量</h3>
+            <div class="Fu_syntax">@media { :root { --Fu_resp: 50% } }</div>
+            <div class="Fu_stage"><div class="Fu_resp-box">宽度随视口变化</div></div>
+            <p class="Fu_note">在媒体查询中修改变量值，即可让多个元素随屏幕尺寸同步变化（窄屏为 50%）。</p>
+        </div>
+
+        <div class="Fu_card">
+            <h3>变量驱动动画</h3>
+            <div class="Fu_syntax">width: var(--Fu_size)</div>
+            <div class="Fu_stage"><div class="Fu_anim"></div></div>
+            <p class="Fu_note">关键帧中也可引用变量，动画过程中的尺寸与颜色都取自自定义属性。</p>
+        </div>
+
+        <div class="Fu_card">
+            <h3>主题切换</h3>
+            <div class="Fu_syntax">body.Fu_dark { --Fu_bg: #1a1a1a; }</div>
+            <div class="Fu_stage"><div class="Fu_theme-box">点击上方按钮试试</div></div>
+            <p class="Fu_note">给 <code>body</code> 添加类名即可整体替换一组变量，无需修改各元素样式。</p>
+        </div>
+
+        <div class="Fu_card">
+            <h3>作者信息</h3>
+            <div class="Fu_syntax">--Fu_name: "傅若涵";</div>
+            <div class="Fu_stage"><div class="Fu_theme-box" id="Fu_nameBox">傅若涵</div></div>
+            <p class="Fu_note">变量不仅能存颜色尺寸，也能存字符串，结合 <code>content</code> 或 JS 动态使用。</p>
+        </div>
+    </div>
+
+    <div class="Fu_footer">© 2026 傅若涵 · 学号 929 · 计算机24009 · 高级网页设计 12-1 CSS 变量</div>
+
+    <script>
+        var Fu_root = document.documentElement;
+        var Fu_themeBtn = document.getElementById("Fu_themeBtn");
+        var Fu_colorBtn = document.getElementById("Fu_colorBtn");
+        var Fu_nameBox = document.getElementById("Fu_nameBox");
+
+        Fu_themeBtn.addEventListener("click", function () {
+            document.body.classList.toggle("Fu_dark");
+        });
+
+        Fu_colorBtn.addEventListener("click", function () {
+            var Fu_hue = Math.floor(Math.random() * 360);
+            Fu_root.style.setProperty("--Fu_main", "hsl(" + Fu_hue + ", 70%, 45%)");
+            Fu_nameBox.textContent = "傅若涵 · " + Fu_hue + "°";
+        });
+    </script>
+</body>
+</html>
