@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>14-2 JavaScript 六种基础数据类型 · 傅若涵</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+            min-height: 100vh;
+            background: #fafafa;
+            color: #1a1a1a;
+            padding: 72px 20px 60px;
+            line-height: 1.75;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .Fu_wrap {
+            max-width: 940px;
+            margin: 0 auto;
+        }
+
+        .Fu_header {
+            text-align: center;
+            margin-bottom: 48px;
+            animation: Fu_fadeUp 0.7s ease both;
+        }
+
+        .Fu_badge {
+            display: inline-block;
+            padding: 5px 16px;
+            border-radius: 2px;
+            font-size: 12px;
+            letter-spacing: 4px;
+            color: #fff;
+            background: #1a1a1a;
+            margin-bottom: 24px;
+        }
+
+        .Fu_header h1 {
+            font-size: 30px;
+            font-weight: 500;
+            letter-spacing: 4px;
+            color: #111;
+        }
+
+        .Fu_header .Fu_sub {
+            margin-top: 12px;
+            font-size: 14px;
+            color: #8a8a8a;
+            letter-spacing: 2px;
+        }
+
+        .Fu_line {
+            width: 56px;
+            height: 1px;
+            margin: 26px auto 0;
+            background: #1a1a1a;
+        }
+
+        .Fu_grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .Fu_card {
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            padding: 26px 24px 22px;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+            animation: Fu_fadeUp 0.7s ease both;
+        }
+
+        .Fu_card:hover {
+            border-color: #1a1a1a;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+            transform: translateY(-3px);
+        }
+
+        .Fu_card .Fu_no {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: #b0b0b0;
+        }
+
+        .Fu_card h2 {
+            font-size: 19px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin: 8px 0 4px;
+            color: #111;
+        }
+
+        .Fu_card .Fu_typeof {
+            display: inline-block;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 12.5px;
+            color: #555;
+            background: #f2f2f2;
+            border: 1px solid #e8e8e8;
+            border-radius: 2px;
+            padding: 2px 10px;
+            margin-bottom: 14px;
+        }
+
+        .Fu_card .Fu_code {
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            background: #1a1a1a;
+            color: #f5f5f5;
+            border-radius: 3px;
+            padding: 12px 14px;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .Fu_card .Fu_desc {
+            margin-top: 14px;
+            font-size: 13.5px;
+            color: #8a8a8a;
+        }
+
+        .Fu_console {
+            margin-top: 40px;
+            background: #1a1a1a;
+            border-radius: 4px;
+            padding: 24px 26px;
+            animation: Fu_fadeUp 0.8s ease both;
+        }
+
+        .Fu_console h2 {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            color: #8a8a8a;
+            margin-bottom: 14px;
+        }
+
+        .Fu_console .Fu_log {
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13.5px;
+            color: #7ee787;
+            white-space: pre-wrap;
+            line-height: 1.9;
+        }
+
+        .Fu_footer {
+            text-align: center;
+            margin-top: 52px;
+            padding-top: 24px;
+            border-top: 1px solid #e8e8e8;
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: #a8a8a8;
+        }
+
+        @keyframes Fu_fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="Fu_wrap">
+        <header class="Fu_header">
+            <div class="Fu_badge">929 · 傅若涵</div>
+            <h1>JavaScript 六种基础数据类型</h1>
+            <p class="Fu_sub">Number · String · Boolean · Undefined · Null · Object</p>
+            <div class="Fu_line"></div>
+        </header>
+
+        <main class="Fu_grid">
+            <section class="Fu_card">
+                <div class="Fu_no">01</div>
+                <h2>Number 数值型</h2>
+                <span class="Fu_typeof" id="Fu_typeofNum"></span>
+                <div class="Fu_code">let Fu_num = 929;
+let Fu_pi = 3.14;</div>
+                <p class="Fu_desc">整数与浮点数都属于 Number，不区分整型和浮点型。</p>
+            </section>
+
+            <section class="Fu_card">
+                <div class="Fu_no">02</div>
+                <h2>String 字符串型</h2>
+                <span class="Fu_typeof" id="Fu_typeofStr"></span>
+                <div class="Fu_code">let Fu_str = "傅若涵";</div>
+                <p class="Fu_desc">用单引号、双引号或反引号包裹的文本序列。</p>
+            </section>
+
+            <section class="Fu_card">
+                <div class="Fu_no">03</div>
+                <h2>Boolean 布尔型</h2>
+                <span class="Fu_typeof" id="Fu_typeofBool"></span>
+                <div class="Fu_code">let Fu_isPass = true;</div>
+                <p class="Fu_desc">只有两个取值：true 或 false，常用于条件判断。</p>
+            </section>
+
+            <section class="Fu_card">
+                <div class="Fu_no">04</div>
+                <h2>Undefined 未定义型</h2>
+                <span class="Fu_typeof" id="Fu_typeofUnd"></span>
+                <div class="Fu_code">let Fu_und;</div>
+                <p class="Fu_desc">声明了变量但未赋值时，其值默认为 undefined。</p>
+            </section>
+
+            <section class="Fu_card">
+                <div class="Fu_no">05</div>
+                <h2>Null 空型</h2>
+                <span class="Fu_typeof" id="Fu_typeofNull"></span>
+                <div class="Fu_code">let Fu_null = null;</div>
+                <p class="Fu_desc">表示"空值"，typeof 返回 object 是历史遗留问题。</p>
+            </section>
+
+            <section class="Fu_card">
+                <div class="Fu_no">06</div>
+                <h2>Object 对象型</h2>
+                <span class="Fu_typeof" id="Fu_typeofObj"></span>
+                <div class="Fu_code">let Fu_obj = {
+  name: "傅若涵",
+  id: 929
+};</div>
+                <p class="Fu_desc">键值对的集合，数组、函数也属于 Object 类型。</p>
+            </section>
+        </main>
+
+        <section class="Fu_console">
+            <h2>控制台输出</h2>
+            <div class="Fu_log" id="Fu_log"></div>
+        </section>
+
+        <footer class="Fu_footer">© 2026 傅若涵 · 学号 929 · 高级网页设计</footer>
+    </div>
+
+    <script>
+        // 1. Number 数值型
+        let Fu_num = 929;
+        let Fu_pi = 3.14;
+
+        // 2. String 字符串型
+        let Fu_str = "傅若涵";
+
+        // 3. Boolean 布尔型
+        let Fu_isPass = true;
+
+        // 4. Undefined 未定义型
+        let Fu_und;
+
+        // 5. Null 空型
+        let Fu_null = null;
+
+        // 6. Object 对象型
+        let Fu_obj = { name: "傅若涵", id: 929 };
+
+        // 页面展示 typeof 检测结果
+        document.getElementById("Fu_typeofNum").textContent = "typeof Fu_num → " + typeof Fu_num;
+        document.getElementById("Fu_typeofStr").textContent = "typeof Fu_str → " + typeof Fu_str;
+        document.getElementById("Fu_typeofBool").textContent = "typeof Fu_isPass → " + typeof Fu_isPass;
+        document.getElementById("Fu_typeofUnd").textContent = "typeof Fu_und → " + typeof Fu_und;
+        document.getElementById("Fu_typeofNull").textContent = "typeof Fu_null → " + typeof Fu_null;
+        document.getElementById("Fu_typeofObj").textContent = "typeof Fu_obj → " + typeof Fu_obj;
+
+        // 控制台输出
+        let Fu_lines = [
+            "Number   : " + Fu_num + " / " + Fu_pi + "  (typeof " + typeof Fu_num + ")",
+            "String   : " + Fu_str + "  (typeof " + typeof Fu_str + ")",
+            "Boolean  : " + Fu_isPass + "  (typeof " + typeof Fu_isPass + ")",
+            "Undefined: " + Fu_und + "  (typeof " + typeof Fu_und + ")",
+            "Null     : " + Fu_null + "  (typeof " + typeof Fu_null + ")",
+            "Object   : " + JSON.stringify(Fu_obj) + "  (typeof " + typeof Fu_obj + ")"
+        ];
+        document.getElementById("Fu_log").textContent = Fu_lines.join("\n");
+        Fu_lines.forEach(function (Fu_line) {
+            console.log(Fu_line);
+        });
+    </script>
+</body>
+</html>
