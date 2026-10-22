@@ -10,9 +10,15 @@ Static HTML/CSS course exercises (《高级网页设计》). No build step, no p
 
 ## Structure
 
-- Numbered exercise files (`1.html` … `8-1 css3选择器.html`) — each is a self-contained page
+- Numbered exercise files (`1.html` … `12-1.html`) — each is a self-contained page
 - `css.css` — shared stylesheet referenced by exercise pages
-- `img/` — image assets
+- `img/` — image assets shared by exercise pages (`1.jpg` … `4.jpg`)
+- `四级项目/` — 四级项目「网页元素设计」交付目录，可独立打包提交：
+  - `9-1 户外自然生态科普.html` — 项目主页面（引用 `./img/*.png`）
+  - `img/` — 主页面引用的 7 张图片
+  - `report_ref1~3.png` / `report_my1~3.png` / `report_test.png` — 报告用原型、实现、测试截图
+  - `高级网页设计I  网页元素设计 项目报告.doc` — 报告模板
+  - `高级网页设计I 实验指导书 网页元素设计.docx` — 实验指导书
 
 ## Conventions
 

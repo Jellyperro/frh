@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>13-2 Lucide SVG 图标</title>
+    <link rel="stylesheet" href="css.css">
+    <style>
+        .Fu_iconContainer {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .Fu_iconItem {
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            min-width: 80px;
+        }
+        .Fu_iconItem svg {
+            width: 32px;
+            height: 32px;
+            color: #4a4a4a;
+            margin-bottom: 8px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .Fu_iconName {
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="Fu_title">13-2 Lucide SVG 图标</h1>
+        <p>采用 SVG 形式（本地化 CDN 文件：lucide/*.svg，及 lucide.min.js）</p>
+        
+        <h2 class="Fu_subtitle">基础图标</h2>
+        <div class="Fu_iconContainer">
+            <div class="Fu_iconItem">
+                <svg class="lucide lucide-home">
+                    <use href="cdn/lucide/home.svg#home"></use>
+                </svg>
+                <div class="Fu_iconName">home</div>
+            </div>
+            <div class="Fu_iconItem">
+                <svg class="lucide lucide-heart">
+                    <use href="cdn/lucide/heart.svg#heart"></use>
+                </svg>
+                <div class="Fu_iconName">heart</div>
+            </div>
+            <div class="Fu_iconItem">
+                <svg class="lucide lucide-star">
+                    <use href="cdn/lucide/star.svg#star"></use>
+                </svg>
+                <div class="Fu_iconName">star</div>
+            </div>
+            <div class="Fu_iconItem">
+                <svg class="lucide lucide-user">
+                    <use href="cdn/lucide/user.svg#user"></use>
+                </svg>
+                <div class="Fu_iconName">user</div>
+            </div>
+            <div class="Fu_iconItem">
+                <svg class="lucide lucide-search">
+                    <use href="cdn/lucide/search.svg#search"></use>
+                </svg>
+                <div class="Fu_iconName">search</div>
+            </div>
+        </div>
+        
+        <h2 class="Fu_subtitle">更多图标</h2>
+        <div class="Fu_iconContainer">
+            <div class="Fu_iconItem">
+                <svg class="lucide lucide-menu">
+                    <use href="cdn/lucide/menu.svg#menu"></use>
+                </svg>
+                <div class="Fu_iconName">menu</div>
+            </div>
+            <div class="Fu_iconItem">
+                <svg class="lucide lucide-x">
+                    <use href="cdn/lucide/x.svg#x"></use>
+                </svg>
+                <div class="Fu_iconName">x</div>
+            </div>
+        </div>
+        
+        <h2 class="Fu_subtitle">使用 lucide.js 动态渲染</h2>
+        <div class="Fu_iconContainer">
+            <div class="Fu_iconItem">
+                <i data-lucide="home"></i>
+                <div class="Fu_iconName">home</div>
+            </div>
+            <div class="Fu_iconItem">
+                <i data-lucide="heart"></i>
+                <div class="Fu_iconName">heart</div>
+            </div>
+            <div class="Fu_iconItem">
+                <i data-lucide="star"></i>
+                <div class="Fu_iconName">star</div>
+            </div>
+            <div class="Fu_iconItem">
+                <i data-lucide="settings"></i>
+                <div class="Fu_iconName">settings</div>
+            </div>
+            <div class="Fu_iconItem">
+                <i data-lucide="user"></i>
+                <div class="Fu_iconName">user</div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <a href="index.html">返回首页</a>
+        </div>
+    </div>
+    
+    <script src="cdn/lucide.min.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

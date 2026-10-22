@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>户外自然生态科普 · 傅若涵（学号 929 · 计算机 24009）</title>
+    <style>
+        /* ============ 全局公共 CSS（所有页面元素统一设置） ============ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+            font-size: 14px;
+            line-height: 1.7;
+            color: #333;
+            background-color: #ffffff;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        ul,
+        ol,
+        dl {
+            list-style: none;
+        }
+
+        img {
+            display: block;
+            width: 100%;
+            border: 0;
+        }
+
+        h2,
+        h3,
+        h4 {
+            font-size: 100%;
+            font-weight: normal;
+        }
+
+        /* ============ 页面外框 ============ */
+        .Fu_wrap {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 0 16px 40px;
+        }
+
+        /* ============ 页头：Logo 左 + 导航 右 ============ */
+        .Fu_topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 0 14px;
+            border-bottom: 2px solid #1a1a1a;
+            margin-bottom: 30px;
+        }
+
+        .Fu_brand {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+        }
+
+        .Fu_brand-name {
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: #1a1a1a;
+        }
+
+        .Fu_brand-en {
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: #999;
+        }
+
+        .Fu_topnav ul {
+            display: flex;
+            gap: 26px;
+        }
+
+        .Fu_topnav a {
+            font-size: 15px;
+            color: #444;
+            padding-bottom: 2px;
+            border-bottom: 2px solid transparent;
+        }
+
+        .Fu_topnav a:hover,
+        .Fu_topnav .Fu_on {
+            color: #1a7a4c;
+            border-bottom-color: #1a7a4c;
+        }
+
+        /* ============ 三个板块的公共左栏样式 ============ */
+        .Fu_col-left {
+            flex: 0 0 240px;
+            width: 240px;
+        }
+
+        .Fu_subtitle {
+            font-size: 30px;
+            font-weight: 700;
+            line-height: 1.2;
+            color: #1a1a1a;
+            margin-bottom: 16px;
+        }
+
+        .Fu_subtitle span {
+            display: block;
+        }
+
+        .Fu_subtitle .Fu_small {
+            font-size: 13px;
+            font-weight: 400;
+            letter-spacing: 3px;
+            color: #aaa;
+            margin-top: 4px;
+        }
+
+        /* ============ 网页元素一：一左一右（仿原型“焦点 FOCUS”板块） ============ */
+        /* 结构：左侧=栏目标题+文章标题列表，右侧=大图+图说 */
+        .Fu_gallery {
+            display: flex;
+            gap: 30px;
+            padding-bottom: 28px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .Fu_menu-gallery li {
+            padding: 11px 0;
+            border-top: 1px solid #eee;
+        }
+
+        .Fu_menu-gallery li:last-child {
+            border-bottom: 1px solid #eee;
+        }
+
+        .Fu_menu-gallery h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            transition: color 0.25s ease;
+        }
+
+        .Fu_menu-gallery .Fu_category {
+            display: block;
+            font-size: 12.5px;
+            color: #9a9a9a;
+        }
+
+        .Fu_menu-gallery li:hover h3 {
+            color: #1a7a4c;
+        }
+
+        .Fu_menu-gallery .Fu_active h3 {
+            color: #1a7a4c;
+        }
+
+        .Fu_gallery-right {
+            flex: 1;
+        }
+
+        .Fu_slide {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .Fu_slide img {
+            height: 420px;
+            object-fit: cover;
+        }
+
+        .Fu_slide-detail {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 46px 24px 18px;
+            color: #ffffff;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.68), rgba(0, 0, 0, 0));
+        }
+
+        .Fu_slide-detail p {
+            font-size: 13.5px;
+            line-height: 1.8;
+        }
+
+        .Fu_slide-detail .Fu_from {
+            display: block;
+            margin-top: 6px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        /* ============ 网页元素二：上图下文（仿原型“景观 LANDSCAPE”板块） ============ */
+        /* 结构：左侧=栏目标题+标签云，右侧=图片为底、标题叠加在图片底部的两列卡片网格 */
+        .Fu_tags {
+            display: flex;
+            gap: 30px;
+            padding-bottom: 28px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .Fu_tag-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .Fu_tag-group a {
+            display: block;
+            padding: 3px 9px;
+            font-size: 12.5px;
+            color: #777;
+            background-color: #f5f5f5;
+            border-radius: 2px;
+        }
+
+        .Fu_tag-group a:hover {
+            background-color: #1a7a4c;
+            color: #ffffff;
+        }
+
+        .Fu_img-list {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+        }
+
+        .Fu_img-block {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .Fu_img-block img {
+            height: 200px;
+            object-fit: cover;
+            transition: transform 0.35s ease;
+        }
+
+        .Fu_img-block:hover img {
+            transform: scale(1.04);
+        }
+
+        .Fu_img-block .Fu_detail {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            padding: 7px 10px;
+            text-align: center;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .Fu_img-block h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .Fu_img-block .Fu_author {
+            display: block;
+            font-size: 12px;
+            font-weight: 400;
+            color: #ffffff;
+            opacity: 0.85;
+        }
+
+        /* ============ 网页元素三：左图右文（仿原型“社区 BBS”板块） ============ */
+        /* 结构：左侧=栏目标题+分类菜单，右侧=标题在左、作者在右的文字列表 */
+        .Fu_community {
+            display: flex;
+            gap: 30px;
+            padding-bottom: 20px;
+        }
+
+        .Fu_menu li {
+            padding: 9px 0;
+            border-top: 1px solid #eee;
+            font-size: 14.5px;
+            color: #555;
+            cursor: default;
+        }
+
+        .Fu_menu li:last-child {
+            border-bottom: 1px solid #eee;
+        }
+
+        .Fu_menu li:hover {
+            color: #1a7a4c;
+        }
+
+        .Fu_menu .Fu_active {
+            color: #1a7a4c;
+            font-weight: 600;
+        }
+
+        .Fu_com-list {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            column-gap: 46px;
+            align-content: start;
+        }
+
+        .Fu_list-item {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 11px 0;
+            border-bottom: 1px dashed #eaeaea;
+        }
+
+        .Fu_list-item dt {
+            flex: 1;
+            min-width: 0;
+            font-size: 14.5px;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: color 0.25s ease;
+        }
+
+        .Fu_list-item dd {
+            flex: 0 0 auto;
+            font-size: 12.5px;
+            color: #a0a0a0;
+        }
+
+        .Fu_list-item:hover dt {
+            color: #1a7a4c;
+        }
+
+        /* ============ 原型参考说明 ============ */
+        .Fu_proto {
+            margin-top: 34px;
+            padding: 16px 20px;
+            background-color: #f7f9f7;
+            border-left: 4px solid #1a7a4c;
+            font-size: 13px;
+            color: #5d6b61;
+            line-height: 1.9;
+        }
+
+        .Fu_proto strong {
+            color: #1a7a4c;
+        }
+
+        /* ============ 页脚 ============ */
+        .Fu_footer {
+            margin-top: 22px;
+            padding-top: 18px;
+            border-top: 1px solid #e8e8e8;
+            text-align: center;
+            font-size: 12.5px;
+            color: #a0a0a0;
+            letter-spacing: 1px;
+        }
+
+        .Fu_footer p + p {
+            margin-top: 4px;
+        }
+
+        /* ============ 响应式 ============ */
+        @media (max-width: 900px) {
+            .Fu_img-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .Fu_topbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .Fu_topnav ul {
+                flex-wrap: wrap;
+                gap: 16px;
+            }
+
+            .Fu_gallery,
+            .Fu_tags,
+            .Fu_community {
+                display: block;
+            }
+
+            .Fu_col-left {
+                width: 100%;
+                margin-bottom: 18px;
+            }
+
+            .Fu_img-list {
+                grid-template-columns: 1fr;
+            }
+
+            .Fu_slide img {
+                height: 250px;
+            }
+
+            .Fu_com-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="Fu_wrap">
+        <!-- 页头：Logo 左 + 导航 右 -->
+        <header class="Fu_topbar">
+            <div class="Fu_brand">
+                <span class="Fu_brand-name">户外自然生态科普</span>
+                <span class="Fu_brand-en">NATURE &amp; ECOLOGY</span>
+            </div>
+            <nav class="Fu_topnav">
+                <ul>
+                    <li><a href="#" class="Fu_on">首页</a></li>
+                    <li><a href="#">焦点</a></li>
+                    <li><a href="#">景观</a></li>
+                    <li><a href="#">社区</a></li>
+                    <li><a href="#">关于</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <!-- ===== 网页元素一：一左一右 —— 仿原型“焦点 FOCUS”板块 ===== -->
+        <section class="Fu_gallery">
+            <div class="Fu_col-left">
+                <h2 class="Fu_subtitle">
+                    <span>焦点</span>
+                    <span class="Fu_small">FOCUS</span>
+                </h2>
+                <ul class="Fu_menu-gallery">
+                    <li class="Fu_active">
+                        <h3>高原湿地的清晨</h3>
+                        <span class="Fu_category">候鸟迁徙的第一站</span>
+                    </li>
+                    <li>
+                        <h3>原始森林的光</h3>
+                        <span class="Fu_category">苔藓与蕨类的世界</span>
+                    </li>
+                    <li>
+                        <h3>冰川消退之后</h3>
+                        <span class="Fu_category">正在融化的固体水库</span>
+                    </li>
+                    <li>
+                        <h3>潮间带两小时</h3>
+                        <span class="Fu_category">一天两次的海底漫步</span>
+                    </li>
+                    <li>
+                        <h3>山溪的生命线</h3>
+                        <span class="Fu_category">冷水鱼与水生昆虫</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="Fu_gallery-right">
+                <div class="Fu_slide">
+                    <img src="./img/湿地水鸟.png" alt="清晨高原湿地中的水鸟群">
+                    <div class="Fu_slide-detail">
+                        <p>清晨的高原湿地水面平静如镜，芦苇丛中陆续有涉禽起飞觅食。作为候鸟迁徙通道上重要的中途停歇地，湿地为鸟类提供了充足的食物补给与隐蔽的繁殖场所。</p>
+                        <span class="Fu_from">摄影 / 图虫创意</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== 网页元素二：上图下文 —— 仿原型“景观 LANDSCAPE”板块 ===== -->
+        <section class="Fu_tags">
+            <div class="Fu_col-left">
+                <h2 class="Fu_subtitle">
+                    <span>景观</span>
+                    <span class="Fu_small">LANDSCAPE</span>
+                </h2>
+                <ul class="Fu_tag-group">
+                    <li><a href="#">冰川</a></li>
+                    <li><a href="#">湿地</a></li>
+                    <li><a href="#">森林</a></li>
+                    <li><a href="#">溪流</a></li>
+                    <li><a href="#">海岸</a></li>
+                    <li><a href="#">草甸</a></li>
+                    <li><a href="#">苔原</a></li>
+                    <li><a href="#">峡谷</a></li>
+                    <li><a href="#">湖泊</a></li>
+                    <li><a href="#">瀑布</a></li>
+                    <li><a href="#">沙丘</a></li>
+                    <li><a href="#">火山</a></li>
+                </ul>
+            </div>
+            <ul class="Fu_img-list">
+                <li class="Fu_img-block">
+                    <a href="#"><img src="./img/雪山云海.png" alt="雪山与翻涌的云海"></a>
+                    <div class="Fu_detail">
+                        <a href="#">
+                            <h4>雪山云海：高山垂直自然带</h4>
+                        </a>
+                        <span class="Fu_author">作者:傅若涵</span>
+                    </div>
+                </li>
+                <li class="Fu_img-block">
+                    <a href="#"><img src="./img/冰川湖.png" alt="高山冰川与冰川湖"></a>
+                    <div class="Fu_detail">
+                        <a href="#">
+                            <h4>冰川湖：正在消逝的水塔</h4>
+                        </a>
+                        <span class="Fu_author">作者:傅若涵</span>
+                    </div>
+                </li>
+                <li class="Fu_img-block">
+                    <a href="#"><img src="./img/森林晨光.png" alt="原始森林中的晨光"></a>
+                    <div class="Fu_detail">
+                        <a href="#">
+                            <h4>森林晨光：林下的光竞争</h4>
+                        </a>
+                        <span class="Fu_author">作者:傅若涵</span>
+                    </div>
+                </li>
+                <li class="Fu_img-block">
+                    <a href="#"><img src="./img/溪流瀑布.png" alt="山间溪流与瀑布"></a>
+                    <div class="Fu_detail">
+                        <a href="#">
+                            <h4>溪流瀑布：溪流的连续生境</h4>
+                        </a>
+                        <span class="Fu_author">作者:傅若涵</span>
+                    </div>
+                </li>
+                <li class="Fu_img-block">
+                    <a href="#"><img src="./img/高山花海.png" alt="高山草甸上的花海"></a>
+                    <div class="Fu_detail">
+                        <a href="#">
+                            <h4>高山花海：雪线附近的绽放</h4>
+                        </a>
+                        <span class="Fu_author">作者:傅若涵</span>
+                    </div>
+                </li>
+                <li class="Fu_img-block">
+                    <a href="#"><img src="./img/海岸潮间带.png" alt="退潮后的海岸礁石潮间带"></a>
+                    <div class="Fu_detail">
+                        <a href="#">
+                            <h4>潮间带：海陆交界的战场</h4>
+                        </a>
+                        <span class="Fu_author">作者:傅若涵</span>
+                    </div>
+                </li>
+            </ul>
+        </section>
+
+        <!-- ===== 网页元素三：列表 —— 仿原型“社区 BBS”板块 ===== -->
+        <section class="Fu_community">
+            <div class="Fu_col-left">
+                <h2 class="Fu_subtitle">
+                    <span>社区</span>
+                    <span class="Fu_small">BBS</span>
+                </h2>
+                <ul class="Fu_menu">
+                    <li class="Fu_active">社区推荐</li>
+                    <li>鸟类观察</li>
+                    <li>植物辨识</li>
+                    <li>徒步笔记</li>
+                    <li>自然摄影</li>
+                    <li>生态保护</li>
+                </ul>
+            </div>
+            <div class="Fu_com-list">
+                <dl class="Fu_list-item">
+                    <dt><a href="#">山地溪流：淡水生态系统的生命线</a></dt>
+                    <dd>作者：傅若涵</dd>
+                </dl>
+                <dl class="Fu_list-item">
+                    <dt><a href="#">林间偶蹄类：森林生态的守护者</a></dt>
+                    <dd>作者：傅若涵</dd>
+                </dl>
+                <dl class="Fu_list-item">
+                    <dt><a href="#">候鸟迁徙：跨越大陆的生态奇迹</a></dt>
+                    <dd>作者：傅若涵</dd>
+                </dl>
+                <dl class="Fu_list-item">
+                    <dt><a href="#">森林碳汇：地球的绿色肺叶</a></dt>
+                    <dd>作者：傅若涵</dd>
+                </dl>
+                <dl class="Fu_list-item">
+                    <dt><a href="#">高山植物：如何在雪线附近生存</a></dt>
+                    <dd>作者：傅若涵</dd>
+                </dl>
+                <dl class="Fu_list-item">
+                    <dt><a href="#">潮间带：海陆交界的生存战场</a></dt>
+                    <dd>作者：傅若涵</dd>
+                </dl>
+                <dl class="Fu_list-item">
+                    <dt><a href="#">冰川湖：正在消融的固体水库</a></dt>
+                    <dd>作者：傅若涵</dd>
+                </dl>
+                <dl class="Fu_list-item">
+                    <dt><a href="#">苔原带：极地边缘的生命极限</a></dt>
+                    <dd>作者：傅若涵</dd>
+                </dl>
+            </div>
+        </section>
+
+        <!-- 原型参考说明 -->
+        <div class="Fu_proto">
+            <strong>参考原型网站：</strong>中国国家地理网 http://www.dili360.com/ —— 本页三个网页元素分别仿照其首页
+            <strong>「焦点 FOCUS」</strong>（左标题列表 + 右大图，对应“一左一右”）、
+            <strong>「景观 LANDSCAPE」</strong>（左标签云 + 右图片卡片，对应“上图下文”）、
+            <strong>「社区 BBS」</strong>（左分类菜单 + 右“标题 + 作者”文字列表，对应“列表”）三个板块的版式结构，仅版式相同，内容全部替换为“户外自然生态科普”主题。
+        </div>
+
+        <!-- 页脚 -->
+        <footer class="Fu_footer">
+            <p>《高级网页设计 I》四级项目 · 网页元素设计</p>
+            <p>傅若涵 · 学号 929 · 计算机 24009</p>
+        </footer>
+    </div>
+</body>
+
+</html>
