@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>15-2 JavaScript 程序结构：条件与循环 · 傅若涵</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+            min-height: 100vh;
+            background: #fafafa;
+            color: #1a1a1a;
+            padding: 72px 20px 60px;
+            line-height: 1.75;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .Fu_wrap {
+            max-width: 940px;
+            margin: 0 auto;
+        }
+
+        .Fu_header {
+            text-align: center;
+            margin-bottom: 44px;
+            animation: Fu_fadeUp 0.7s ease both;
+        }
+
+        .Fu_badge {
+            display: inline-block;
+            padding: 5px 16px;
+            border-radius: 2px;
+            font-size: 12px;
+            letter-spacing: 4px;
+            color: #fff;
+            background: #1a1a1a;
+            margin-bottom: 24px;
+        }
+
+        .Fu_header h1 {
+            font-size: 30px;
+            font-weight: 500;
+            letter-spacing: 4px;
+            color: #111;
+        }
+
+        .Fu_header .Fu_sub {
+            margin-top: 12px;
+            font-size: 14px;
+            color: #8a8a8a;
+            letter-spacing: 2px;
+        }
+
+        .Fu_line {
+            width: 56px;
+            height: 1px;
+            margin: 26px auto 0;
+            background: #1a1a1a;
+        }
+
+        .Fu_grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .Fu_card {
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            padding: 26px 24px 22px;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+            animation: Fu_fadeUp 0.7s ease both;
+        }
+
+        .Fu_card:hover {
+            border-color: #1a1a1a;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+            transform: translateY(-3px);
+        }
+
+        .Fu_card .Fu_no {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: #b0b0b0;
+        }
+
+        .Fu_card h2 {
+            font-size: 19px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin: 8px 0 12px;
+            color: #111;
+        }
+
+        .Fu_card .Fu_code {
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            background: #1a1a1a;
+            color: #f5f5f5;
+            border-radius: 3px;
+            padding: 12px 14px;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .Fu_card .Fu_out {
+            margin-top: 14px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            color: #3a3a3a;
+            background: #f2f2f2;
+            border: 1px solid #e8e8e8;
+            border-radius: 3px;
+            padding: 10px 14px;
+            min-height: 20px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .Fu_card .Fu_desc {
+            margin-top: 12px;
+            font-size: 13.5px;
+            color: #8a8a8a;
+        }
+
+        .Fu_table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 14px;
+            font-size: 12.5px;
+            text-align: center;
+        }
+
+        .Fu_table td {
+            border: 1px solid #e8e8e8;
+            padding: 5px 2px;
+            color: #3a3a3a;
+            background: #fff;
+        }
+
+        .Fu_footer {
+            text-align: center;
+            margin-top: 52px;
+            padding-top: 24px;
+            border-top: 1px solid #e8e8e8;
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: #a8a8a8;
+        }
+
+        @media (max-width: 900px) {
+            .Fu_grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @keyframes Fu_fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="Fu_wrap">
+        <header class="Fu_header">
+            <div class="Fu_badge">929 · 傅若涵</div>
+            <h1>JavaScript 程序结构</h1>
+            <p class="Fu_sub">条件结构 if / switch · 循环结构 for / while / do...while</p>
+            <div class="Fu_line"></div>
+        </header>
+
+        <main class="Fu_grid">
+            <section class="Fu_card">
+                <div class="Fu_no">01</div>
+                <h2>条件结构 · if...else 成绩等级</h2>
+                <div class="Fu_code">if (Fu_score >= 90) {
+  Fu_grade = "优秀";
+} else if (Fu_score >= 80) {
+  Fu_grade = "良好";
+} else if (Fu_score >= 60) {
+  Fu_grade = "及格";
+} else {
+  Fu_grade = "不及格";
+}</div>
+                <div class="Fu_out" id="Fu_outIf"></div>
+                <p class="Fu_desc">按分数段输出等级，展示 if...else if...else 多分支判断。</p>
+            </section>
+
+            <section class="Fu_card">
+                <div class="Fu_no">02</div>
+                <h2>条件结构 · switch 星期判断</h2>
+                <div class="Fu_code">switch (Fu_day) {
+  case 6: Fu_name = "周六"; break;
+  case 7: Fu_name = "周日"; break;
+  default: Fu_name = "工作日";
+}</div>
+                <div class="Fu_out" id="Fu_outSwitch"></div>
+                <p class="Fu_desc">switch 匹配固定取值，default 处理其余情况。</p>
+            </section>
+
+            <section class="Fu_card">
+                <div class="Fu_no">03</div>
+                <h2>循环结构 · for 九九乘法表</h2>
+                <div class="Fu_code">for (let Fu_i = 1; Fu_i <= 9; Fu_i++) {
+  for (let Fu_j = 1; Fu_j <= Fu_i; Fu_j++) {
+    // Fu_i × Fu_j = 积
+  }
+}</div>
+                <table class="Fu_table" id="Fu_table99"></table>
+                <p class="Fu_desc">双重 for 循环嵌套，外层控制行、内层控制列。</p>
+            </section>
+
+            <section class="Fu_card">
+                <div class="Fu_no">04</div>
+                <h2>循环结构 · while 与 do...while</h2>
+                <div class="Fu_code">while (Fu_i <= 100) {
+  Fu_sum += Fu_i;  // 1+2+...+100
+  Fu_i++;
+}
+do {
+  Fu_n++;          // 至少执行一次
+} while (Fu_n < 5);</div>
+                <div class="Fu_out" id="Fu_outWhile"></div>
+                <p class="Fu_desc">while 先判断后执行；do...while 先执行后判断，至少执行一次。</p>
+            </section>
+        </main>
+
+        <footer class="Fu_footer">© 2026 傅若涵 · 学号 929 · 高级网页设计</footer>
+    </div>
+
+    <script>
+        // ===== 01 条件结构：if...else 成绩等级 =====
+        function Fu_gradeOf(Fu_score) {
+            let Fu_grade;
+            if (Fu_score >= 90) {
+                Fu_grade = "优秀";
+            } else if (Fu_score >= 80) {
+                Fu_grade = "良好";
+            } else if (Fu_score >= 60) {
+                Fu_grade = "及格";
+            } else {
+                Fu_grade = "不及格";
+            }
+            return Fu_grade;
+        }
+        let Fu_ifLines = [];
+        [95, 85, 70, 55].forEach(function (Fu_score) {
+            Fu_ifLines.push(Fu_score + " 分 → " + Fu_gradeOf(Fu_score));
+        });
+        document.getElementById("Fu_outIf").textContent = Fu_ifLines.join("\n");
+
+        // ===== 02 条件结构：switch 星期判断 =====
+        let Fu_switchLines = [];
+        [3, 6, 7].forEach(function (Fu_day) {
+            let Fu_name;
+            switch (Fu_day) {
+                case 6: Fu_name = "周六"; break;
+                case 7: Fu_name = "周日"; break;
+                default: Fu_name = "工作日";
+            }
+            Fu_switchLines.push("周" + Fu_day + " → " + Fu_name);
+        });
+        document.getElementById("Fu_outSwitch").textContent = Fu_switchLines.join("\n");
+
+        // ===== 03 循环结构：for 九九乘法表 =====
+        let Fu_table99 = document.getElementById("Fu_table99");
+        let Fu_tableHtml = "";
+        for (let Fu_i = 1; Fu_i <= 9; Fu_i++) {
+            Fu_tableHtml += "<tr>";
+            for (let Fu_j = 1; Fu_j <= 9; Fu_j++) {
+                if (Fu_j <= Fu_i) {
+                    Fu_tableHtml += "<td>" + Fu_j + "×" + Fu_i + "=" + (Fu_i * Fu_j) + "</td>";
+                } else {
+                    Fu_tableHtml += "<td></td>";
+                }
+            }
+            Fu_tableHtml += "</tr>";
+        }
+        Fu_table99.innerHTML = Fu_tableHtml;
+
+        // ===== 04 循环结构：while 与 do...while =====
+        let Fu_i = 1, Fu_sum = 0;
+        while (Fu_i <= 100) {
+            Fu_sum += Fu_i;
+            Fu_i++;
+        }
+
+        let Fu_n = 0, Fu_count = 0;
+        do {
+            Fu_n++;
+            Fu_count++;
+        } while (Fu_n < 5);
+
+        let Fu_whileLine = "while 求和 1+2+...+100 = " + Fu_sum;
+        let Fu_doLine = "do...while 循环执行了 " + Fu_count + " 次（Fu_n 从 0 增到 5）";
+        document.getElementById("Fu_outWhile").textContent = Fu_whileLine + "\n" + Fu_doLine;
+
+        // 控制台同步输出
+        console.log("傅若涵 15-2 程序结构演示");
+        Fu_ifLines.forEach(function (Fu_line) { console.log("[if...else] " + Fu_line); });
+        Fu_switchLines.forEach(function (Fu_line) { console.log("[switch] " + Fu_line); });
+        console.log("[while] " + Fu_whileLine);
+        console.log("[do...while] " + Fu_doLine);
+    </script>
+</body>
+</html>
