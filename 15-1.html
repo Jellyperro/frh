@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>15-1 数七游戏 · 100个盒子 · 傅若涵</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+            min-height: 100vh;
+            background: #fafafa;
+            color: #1a1a1a;
+            padding: 72px 20px 60px;
+            line-height: 1.75;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .Fu_wrap {
+            max-width: 940px;
+            margin: 0 auto;
+        }
+
+        .Fu_header {
+            text-align: center;
+            margin-bottom: 44px;
+            animation: Fu_fadeUp 0.7s ease both;
+        }
+
+        .Fu_badge {
+            display: inline-block;
+            padding: 5px 16px;
+            border-radius: 2px;
+            font-size: 12px;
+            letter-spacing: 4px;
+            color: #fff;
+            background: #1a1a1a;
+            margin-bottom: 24px;
+        }
+
+        .Fu_header h1 {
+            font-size: 30px;
+            font-weight: 500;
+            letter-spacing: 4px;
+            color: #111;
+        }
+
+        .Fu_header .Fu_sub {
+            margin-top: 12px;
+            font-size: 14px;
+            color: #8a8a8a;
+            letter-spacing: 2px;
+        }
+
+        .Fu_line {
+            width: 56px;
+            height: 1px;
+            margin: 26px auto 0;
+            background: #1a1a1a;
+        }
+
+        .Fu_rule {
+            background: #f2f2f2;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            padding: 22px 26px;
+            margin-bottom: 32px;
+            font-size: 14px;
+            color: #3a3a3a;
+            animation: Fu_fadeUp 0.8s ease both;
+        }
+
+        .Fu_rule h2 {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            color: #8a8a8a;
+            margin-bottom: 10px;
+        }
+
+        .Fu_rule p {
+            padding-left: 16px;
+            border-left: 2px solid #1a1a1a;
+        }
+
+        .Fu_legend {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: #8a8a8a;
+            flex-wrap: wrap;
+            animation: Fu_fadeUp 0.8s ease both;
+        }
+
+        .Fu_legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .Fu_legend .Fu_dotNormal,
+        .Fu_legend .Fu_dotEmpty {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+
+        .Fu_legend .Fu_dotNormal {
+            background: #fff;
+            border: 1px solid #1a1a1a;
+        }
+
+        .Fu_legend .Fu_dotEmpty {
+            background: #fff;
+            border: 1px dashed #c8c8c8;
+        }
+
+        .Fu_grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 10px;
+            animation: Fu_fadeUp 0.9s ease both;
+        }
+
+        .Fu_box {
+            aspect-ratio: 1 / 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            border: 1px solid #1a1a1a;
+            border-radius: 4px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 16px;
+            font-weight: 600;
+            color: #111;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .Fu_box:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+            z-index: 1;
+        }
+
+        .Fu_box.Fu_skip {
+            border: 1px dashed #c8c8c8;
+            color: transparent;
+            background: #fff;
+        }
+
+        .Fu_footer {
+            text-align: center;
+            margin-top: 52px;
+            padding-top: 24px;
+            border-top: 1px solid #e8e8e8;
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: #a8a8a8;
+        }
+
+        @media (max-width: 640px) {
+            .Fu_grid {
+                gap: 6px;
+            }
+
+            .Fu_box {
+                font-size: 12px;
+                border-radius: 3px;
+            }
+        }
+
+        @keyframes Fu_fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="Fu_wrap">
+        <header class="Fu_header">
+            <div class="Fu_badge">929 · 傅若涵</div>
+            <h1>数七游戏 · 100 个盒子</h1>
+            <p class="Fu_sub">遇 7 不报数 · 空盒子跳过</p>
+            <div class="Fu_line"></div>
+        </header>
+
+        <section class="Fu_rule">
+            <h2>游戏规则</h2>
+            <p>从 1 数到 100：凡是 <strong>7 的倍数</strong>（7、14、21…）或<strong>含有数字 7 的数</strong>（7、17、27、70~79…），都不报数（输出空盒子）；其余数字正常报数（盒子内显示数字）。</p>
+        </section>
+
+        <div class="Fu_legend">
+            <span><i class="Fu_dotNormal"></i> 正常报数</span>
+            <span><i class="Fu_dotEmpty"></i> 遇七跳过（空盒子）</span>
+        </div>
+
+        <main class="Fu_grid" id="Fu_grid"></main>
+
+        <footer class="Fu_footer">© 2026 傅若涵 · 学号 929 · 高级网页设计</footer>
+    </div>
+
+    <script>
+        // 判断是否命中数七规则：7 的倍数，或数字中含有 7（含末尾是 7 的情况）
+        function Fu_isSeven(n) {
+            return n % 7 === 0 || String(n).indexOf("7") !== -1;
+        }
+
+        // 生成 100 个盒子
+        let Fu_grid = document.getElementById("Fu_grid");
+        let Fu_normalCount = 0;
+        let Fu_skipCount = 0;
+        let Fu_html = "";
+
+        for (let Fu_i = 1; Fu_i <= 100; Fu_i++) {
+            if (Fu_isSeven(Fu_i)) {
+                // 满足规则：输出空盒子
+                Fu_html += '<div class="Fu_box Fu_skip"></div>';
+                Fu_skipCount++;
+            } else {
+                // 不满足规则：盒子内部显示数字
+                Fu_html += '<div class="Fu_box">' + Fu_i + '</div>';
+                Fu_normalCount++;
+            }
+        }
+        Fu_grid.innerHTML = Fu_html;
+
+        console.log("傅若涵 数七游戏：正常报数 " + Fu_normalCount + " 个，跳过空盒子 " + Fu_skipCount + " 个");
+    </script>
+</body>
+</html>
