@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>16-2 JavaScript 对象与字符串可视化 · 傅若涵</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+            min-height: 100vh;
+            background: #fafafa;
+            color: #1a1a1a;
+            padding: 72px 20px 60px;
+            line-height: 1.75;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .Fu_wrap {
+            max-width: 940px;
+            margin: 0 auto;
+        }
+
+        .Fu_header {
+            text-align: center;
+            margin-bottom: 44px;
+            animation: Fu_fadeUp 0.7s ease both;
+        }
+
+        .Fu_badge {
+            display: inline-block;
+            padding: 5px 16px;
+            border-radius: 2px;
+            font-size: 12px;
+            letter-spacing: 4px;
+            color: #fff;
+            background: #1a1a1a;
+            margin-bottom: 24px;
+        }
+
+        .Fu_header h1 {
+            font-size: 30px;
+            font-weight: 500;
+            letter-spacing: 4px;
+            color: #111;
+        }
+
+        .Fu_header .Fu_sub {
+            margin-top: 12px;
+            font-size: 14px;
+            color: #8a8a8a;
+            letter-spacing: 2px;
+        }
+
+        .Fu_line {
+            width: 56px;
+            height: 1px;
+            margin: 26px auto 0;
+            background: #1a1a1a;
+        }
+
+        .Fu_stage {
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            padding: 28px 26px 24px;
+            margin-bottom: 24px;
+            animation: Fu_fadeUp 0.7s ease both;
+        }
+
+        .Fu_stage .Fu_label {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: #b0b0b0;
+            margin-bottom: 14px;
+        }
+
+        .Fu_stage .Fu_label b {
+            color: #1a1a1a;
+        }
+
+        /* 对象：属性键值对盒子 */
+        .Fu_objboxes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            min-height: 64px;
+            padding: 14px 12px 10px;
+            background: #f7f7f7;
+            border: 1px dashed #d8d8d8;
+            border-radius: 4px;
+        }
+
+        .Fu_pair {
+            display: flex;
+            align-items: stretch;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #d8d8d8;
+            background: #fff;
+            animation: Fu_fadeUp 0.35s ease both;
+        }
+
+        .Fu_pair .Fu_key,
+        .Fu_pair .Fu_val {
+            padding: 8px 12px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+        }
+
+        .Fu_pair .Fu_key {
+            background: #1a1a1a;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .Fu_pair .Fu_val {
+            color: #1a1a1a;
+        }
+
+        .Fu_pair.Fu_hot {
+            border-color: #0f8a3d;
+        }
+
+        .Fu_pair.Fu_hot .Fu_val {
+            background: #e6f5ea;
+            color: #0f8a3d;
+            font-weight: 600;
+        }
+
+        .Fu_empty {
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            color: #b0b0b0;
+        }
+
+        /* 字符串：字符盒子 */
+        .Fu_strboxes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            min-height: 72px;
+            padding: 14px 12px 10px;
+            background: #f7f7f7;
+            border: 1px dashed #d8d8d8;
+            border-radius: 4px;
+        }
+
+        .Fu_char {
+            text-align: center;
+            animation: Fu_fadeUp 0.35s ease both;
+        }
+
+        .Fu_char .Fu_ch {
+            min-width: 30px;
+            height: 36px;
+            padding: 0 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1a1a1a;
+            color: #fff;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 3px;
+        }
+
+        .Fu_char .Fu_idx {
+            margin-top: 4px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 11px;
+            color: #b0b0b0;
+        }
+
+        .Fu_char.Fu_hot .Fu_ch {
+            background: #0f8a3d;
+            transform: translateY(-4px);
+        }
+
+        .Fu_char.Fu_cold .Fu_ch {
+            background: #c0c0c0;
+        }
+
+        .Fu_input {
+            margin-top: 14px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .Fu_input label {
+            font-size: 13px;
+            color: #8a8a8a;
+            letter-spacing: 1px;
+        }
+
+        .Fu_input input {
+            flex: 1;
+            min-width: 220px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            padding: 8px 12px;
+            border: 1px solid #d8d8d8;
+            border-radius: 3px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .Fu_input input:focus {
+            border-color: #1a1a1a;
+        }
+
+        .Fu_code {
+            margin-top: 18px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            background: #1a1a1a;
+            color: #f5f5f5;
+            border-radius: 3px;
+            padding: 12px 14px;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .Fu_ret {
+            margin-top: 12px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            color: #3a3a3a;
+            background: #f2f2f2;
+            border: 1px solid #e8e8e8;
+            border-radius: 3px;
+            padding: 10px 14px;
+            min-height: 20px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .Fu_ret b {
+            color: #0f8a3d;
+        }
+
+        .Fu_note {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #8a8a8a;
+        }
+
+        .Fu_group {
+            margin-top: 22px;
+        }
+
+        .Fu_group .Fu_gt {
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: #8a8a8a;
+            margin-bottom: 10px;
+        }
+
+        .Fu_btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .Fu_btn {
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            padding: 8px 14px;
+            border: 1px solid #d8d8d8;
+            border-radius: 3px;
+            background: #fff;
+            color: #1a1a1a;
+            cursor: pointer;
+            transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+        }
+
+        .Fu_btn:hover {
+            border-color: #1a1a1a;
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        .Fu_btn.Fu_active {
+            border-color: #1a1a1a;
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        .Fu_btn.Fu_reset {
+            border-color: #c0392b;
+            color: #c0392b;
+        }
+
+        .Fu_btn.Fu_reset:hover {
+            background: #c0392b;
+            color: #fff;
+        }
+
+        .Fu_table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 14px;
+            font-size: 13px;
+        }
+
+        .Fu_table th,
+        .Fu_table td {
+            border: 1px solid #e8e8e8;
+            padding: 8px 10px;
+            text-align: left;
+        }
+
+        .Fu_table th {
+            background: #1a1a1a;
+            color: #fff;
+            font-weight: 500;
+            letter-spacing: 1px;
+            font-size: 12.5px;
+        }
+
+        .Fu_table td:first-child {
+            font-family: Consolas, "Courier New", monospace;
+            color: #111;
+            white-space: nowrap;
+        }
+
+        .Fu_table tr:nth-child(even) td {
+            background: #fafafa;
+        }
+
+        .Fu_section {
+            margin-top: 36px;
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            padding: 26px 24px 22px;
+            animation: Fu_fadeUp 0.8s ease both;
+        }
+
+        .Fu_section h2 {
+            font-size: 19px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            color: #111;
+        }
+
+        .Fu_section .Fu_desc {
+            font-size: 13.5px;
+            color: #8a8a8a;
+        }
+
+        .Fu_back {
+            display: inline-block;
+            margin-top: 32px;
+            font-size: 13px;
+            letter-spacing: 1px;
+            color: #555;
+            text-decoration: none;
+            border-bottom: 1px solid #d8d8d8;
+            padding-bottom: 2px;
+            transition: color 0.25s ease, border-color 0.25s ease;
+        }
+
+        .Fu_back:hover {
+            color: #000;
+            border-color: #1a1a1a;
+        }
+
+        .Fu_footer {
+            text-align: center;
+            margin-top: 44px;
+            padding-top: 24px;
+            border-top: 1px solid #e8e8e8;
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: #a8a8a8;
+        }
+
+        @keyframes Fu_fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="Fu_wrap">
+        <header class="Fu_header">
+            <div class="Fu_badge">929 · 傅若涵</div>
+            <h1>JavaScript 对象与字符串可视化</h1>
+            <p class="Fu_sub">16-2 · 对象的属性操作与字符串常用方法交互演示</p>
+            <div class="Fu_line"></div>
+        </header>
+
+        <!-- ============ 对象演示台 ============ -->
+        <section class="Fu_stage">
+            <div class="Fu_label">对象演示台 · <b>Fu_student</b>（属性数: <b id="Fu_objCount">4</b>）· 点击按钮操作属性</div>
+            <div class="Fu_objboxes" id="Fu_objboxes"></div>
+            <div class="Fu_code" id="Fu_objCode">// 点击一个按钮，这里会显示对应的代码</div>
+            <div class="Fu_ret" id="Fu_objRet">返回值将显示在这里</div>
+            <div class="Fu_note" id="Fu_objNote">提示：对象由「键: 值」对组成，绿色表示刚被读取或修改的属性。</div>
+
+            <div class="Fu_group">
+                <div class="Fu_gt">一、属性的读取 / 添加 / 修改 / 删除</div>
+                <div class="Fu_btns" id="Fu_objG1"></div>
+            </div>
+
+            <div class="Fu_group">
+                <div class="Fu_gt">二、遍历与方法</div>
+                <div class="Fu_btns" id="Fu_objG2"></div>
+            </div>
+
+            <div class="Fu_group">
+                <div class="Fu_btns">
+                    <button class="Fu_btn Fu_reset" id="Fu_objReset" type="button">↺ 重置对象</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ 字符串演示台 ============ -->
+        <section class="Fu_stage">
+            <div class="Fu_label">字符串演示台 · 每个字符就是一个「格子」，索引从 <b>0</b> 开始</div>
+            <div class="Fu_strboxes" id="Fu_strboxes"></div>
+            <div class="Fu_input">
+                <label for="Fu_strInput">编辑字符串：</label>
+                <input type="text" id="Fu_strInput" value="Hello 傅若涵 929" maxlength="60">
+                <button class="Fu_btn Fu_reset" id="Fu_strReset" type="button">↺ 恢复默认</button>
+            </div>
+            <div class="Fu_code" id="Fu_strCode">// 点击一个方法按钮，这里会显示对应的代码</div>
+            <div class="Fu_ret" id="Fu_strRet">返回值将显示在这里</div>
+            <div class="Fu_note" id="Fu_strNote">提示：绿色格子表示方法选中的字符。</div>
+
+            <div class="Fu_group">
+                <div class="Fu_gt">一、访问与查找</div>
+                <div class="Fu_btns" id="Fu_strG1"></div>
+            </div>
+
+            <div class="Fu_group">
+                <div class="Fu_gt">二、截取与变换</div>
+                <div class="Fu_btns" id="Fu_strG2"></div>
+            </div>
+        </section>
+
+        <!-- 速查表 -->
+        <section class="Fu_section">
+            <h2>对象与字符串速查表</h2>
+            <p class="Fu_desc">傅若涵 · 929 · 对象存「键值对」，字符串存「字符序列」</p>
+            <table class="Fu_table">
+                <tr>
+                    <th>语法 / 方法</th>
+                    <th>作用</th>
+                    <th>返回值</th>
+                </tr>
+                <tr><td>obj.key / obj['key']</td><td>读取属性（点号 / 方括号）</td><td>属性值</td></tr>
+                <tr><td>obj.key = value</td><td>添加或修改属性</td><td>value</td></tr>
+                <tr><td>delete obj.key</td><td>删除属性</td><td>true</td></tr>
+                <tr><td>for...in / Object.keys()</td><td>遍历属性名</td><td>— / 键名数组</td></tr>
+                <tr><td>方法与 this</td><td>属性值为函数时称「方法」，this 指向对象本身</td><td>—</td></tr>
+                <tr><td>str.length</td><td>字符串长度（属性）</td><td>数字</td></tr>
+                <tr><td>charAt(i) / str[i]</td><td>按索引取字符</td><td>字符</td></tr>
+                <tr><td>indexOf(s) / includes(s)</td><td>查找子串位置 / 是否包含</td><td>索引 / 布尔值</td></tr>
+                <tr><td>slice(a, b) / substring(a, b)</td><td>截取子串，含头不含尾</td><td>新字符串</td></tr>
+                <tr><td>toUpperCase() / toLowerCase()</td><td>转大写 / 小写</td><td>新字符串</td></tr>
+                <tr><td>replace(old, new)</td><td>替换第一个匹配的子串</td><td>新字符串</td></tr>
+                <tr><td>split(sep)</td><td>按分隔符拆分为数组</td><td>数组</td></tr>
+                <tr><td>trim()</td><td>去除首尾空格</td><td>新字符串</td></tr>
+                <tr><td>`模板${x}字符串`</td><td>模板字符串：反引号 + ${} 嵌入变量</td><td>新字符串</td></tr>
+            </table>
+        </section>
+
+        <a class="Fu_back" href="./index.html">← 返回课堂实践导航</a>
+
+        <footer class="Fu_footer">© 2026 傅若涵 · 学号 929 · 计算机24009 · 高级网页设计</footer>
+    </div>
+
+    <script>
+        /* ==================== 一、对象演示 ==================== */
+        var Fu_objInit = function () {
+            return { 姓名: '傅若涵', 学号: 929, 专业: '计算机', 爱好: '徒步' };
+        };
+        var Fu_student = Fu_objInit();
+        var Fu_lastKey = null;
+
+        var Fu_objboxes = document.getElementById('Fu_objboxes');
+        var Fu_objCount = document.getElementById('Fu_objCount');
+        var Fu_objCode = document.getElementById('Fu_objCode');
+        var Fu_objRet = document.getElementById('Fu_objRet');
+        var Fu_objNote = document.getElementById('Fu_objNote');
+
+        function Fu_renderObj() {
+            var html = '';
+            var keys = Object.keys(Fu_student);
+            for (var i = 0; i < keys.length; i++) {
+                var k = keys[i];
+                var v = typeof Fu_student[k] === 'function' ? 'ƒ ()' : Fu_student[k];
+                var hot = (k === Fu_lastKey) ? ' Fu_hot' : '';
+                html += '<div class="Fu_pair' + hot + '">'
+                     +    '<div class="Fu_key">' + k + '</div>'
+                     +    '<div class="Fu_val">' + v + '</div>'
+                     +  '</div>';
+            }
+            if (keys.length === 0) {
+                html = '<div class="Fu_empty">空对象 {} —— 试试「添加属性」</div>';
+            }
+            Fu_objboxes.innerHTML = html;
+            Fu_objCount.textContent = keys.length;
+        }
+
+        function Fu_objShow(code, ret, note) {
+            Fu_objCode.textContent = code;
+            Fu_objRet.innerHTML = '返回值: <b>' + ret + '</b>';
+            Fu_objNote.textContent = note;
+        }
+
+        // 对象操作注册表
+        var Fu_objOps = {
+            dot: {
+                btn: 'Fu_student.姓名', code: 'Fu_student.姓名',
+                run: function () {
+                    Fu_lastKey = '姓名';
+                    return { ret: '"' + Fu_student['姓名'] + '"', note: '点号法：用 obj.键名 读取属性，最常用。' };
+                }
+            },
+            bracket: {
+                btn: "Fu_student['学号']", code: "Fu_student['学号']",
+                run: function () {
+                    Fu_lastKey = '学号';
+                    return { ret: Fu_student['学号'], note: '方括号法：obj["键名"]，键名含中文、空格或存在变量里时必须用它。' };
+                }
+            },
+            add: {
+                btn: '添加属性', code: 'Fu_student.城市 = "杭州"',
+                run: function () {
+                    Fu_student['城市'] = '杭州';
+                    Fu_lastKey = '城市';
+                    return { ret: '"杭州"', note: '给不存在的键赋值 = 新增属性；对象随时可以长大。' };
+                }
+            },
+            set: {
+                btn: '修改属性', code: 'Fu_student.爱好 = "摄影"',
+                run: function () {
+                    Fu_student['爱好'] = '摄影';
+                    Fu_lastKey = '爱好';
+                    return { ret: '"摄影"', note: '给已存在的键赋值 = 修改属性，旧值被覆盖。' };
+                }
+            },
+            del: {
+                btn: 'delete 删除', code: 'delete Fu_student.专业',
+                run: function () {
+                    var gone = delete Fu_student['专业'];
+                    Fu_lastKey = null;
+                    return { ret: gone, note: 'delete 删除属性及其值；再访问会得到 undefined。' };
+                }
+            },
+            miss: {
+                btn: '访问不存在的', code: 'Fu_student.电话',
+                run: function () {
+                    Fu_lastKey = null;
+                    return { ret: 'undefined', note: '访问不存在的属性不报错，返回 undefined —— 排错时的常见来源。' };
+                }
+            },
+            forin: {
+                btn: 'for...in 遍历', code: 'for (var k in Fu_student) { ... }',
+                run: function () {
+                    Fu_lastKey = null;
+                    var lines = [];
+                    for (var k in Fu_student) {
+                        var v = typeof Fu_student[k] === 'function' ? 'ƒ ()' : Fu_student[k];
+                        lines.push('  ' + k + ' → ' + v);
+                    }
+                    return { ret: lines.length ? '\n' + lines.join('\n') : '（空对象，循环一次都没执行）', note: 'for...in 依次把每个键名交给变量 k。' };
+                }
+            },
+            keys: {
+                btn: 'Object.keys()', code: 'Object.keys(Fu_student)',
+                run: function () {
+                    Fu_lastKey = null;
+                    return { ret: '[' + Object.keys(Fu_student).map(function (k) { return '"' + k + '"'; }).join(', ') + ']', note: 'Object.keys 把所有键名收集成一个数组，可继续用数组方法处理。' };
+                }
+            },
+            method: {
+                btn: '方法与 this', code: 'Fu_student.sayHi = function() { return "我是" + this.姓名; }',
+                run: function () {
+                    Fu_student.sayHi = function () { return '我是' + this['姓名'] + '，学号 ' + this['学号']; };
+                    Fu_lastKey = 'sayHi';
+                    return { ret: '"' + Fu_student.sayHi() + '"', note: '属性值是函数就叫「方法」；方法里的 this 指向所属对象。' };
+                }
+            }
+        };
+
+        var Fu_objGroups = {
+            1: document.getElementById('Fu_objG1'),
+            2: document.getElementById('Fu_objG2')
+        };
+        var Fu_objOrder = { dot: 1, bracket: 1, add: 1, set: 1, del: 1, miss: 1, forin: 2, keys: 2, method: 2 };
+
+        Object.keys(Fu_objOps).forEach(function (key) {
+            var op = Fu_objOps[key];
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'Fu_btn';
+            btn.textContent = op.btn;
+            btn.addEventListener('click', function () {
+                var r = op.run();
+                Fu_objShow(op.code, r.ret, r.note);
+                Fu_renderObj();
+                var all = document.querySelectorAll('.Fu_btn');
+                for (var i = 0; i < all.length; i++) { all[i].classList.remove('Fu_active'); }
+                btn.classList.add('Fu_active');
+            });
+            Fu_objGroups[Fu_objOrder[key]].appendChild(btn);
+        });
+
+        document.getElementById('Fu_objReset').addEventListener('click', function () {
+            Fu_student = Fu_objInit();
+            Fu_lastKey = null;
+            Fu_renderObj();
+            Fu_objCode.textContent = '// 对象已重置';
+            Fu_objRet.textContent = '返回值将显示在这里';
+            Fu_objNote.textContent = '提示：对象由「键: 值」对组成，绿色表示刚被读取或修改的属性。';
+            var all = document.querySelectorAll('.Fu_btn');
+            for (var i = 0; i < all.length; i++) { all[i].classList.remove('Fu_active'); }
+        });
+
+        /* ==================== 二、字符串演示 ==================== */
+        var Fu_strDefault = 'Hello 傅若涵 929';
+        var Fu_strInput = document.getElementById('Fu_strInput');
+        var Fu_strboxes = document.getElementById('Fu_strboxes');
+        var Fu_strCode = document.getElementById('Fu_strCode');
+        var Fu_strRet = document.getElementById('Fu_strRet');
+        var Fu_strNote = document.getElementById('Fu_strNote');
+
+        // 渲染字符串的每个字符；mark 控制高亮区间 [a, b) 或单个索引
+        function Fu_renderStr(markA, markB, cold) {
+            var s = Fu_strInput.value;
+            var html = '';
+            for (var i = 0; i < s.length; i++) {
+                var cls = 'Fu_char';
+                if (markA !== undefined && markB !== undefined && i >= markA && i < markB) { cls += ' Fu_hot'; }
+                if (cold !== undefined && i >= cold) { cls += ' Fu_cold'; }
+                var ch = s[i] === ' ' ? '␣' : s[i];
+                html += '<div class="' + cls + '">'
+                     +    '<div class="Fu_ch">' + ch + '</div>'
+                     +    '<div class="Fu_idx">' + i + '</div>'
+                     +  '</div>';
+            }
+            if (s.length === 0) {
+                html = '<div class="Fu_empty">空字符串 (length: 0)</div>';
+            }
+            Fu_strboxes.innerHTML = html;
+        }
+
+        function Fu_strShow(code, ret, note) {
+            Fu_strCode.textContent = code;
+            Fu_strRet.innerHTML = '返回值: <b>' + ret + '</b>';
+            Fu_strNote.textContent = note;
+        }
+
+        // 字符串操作注册表：run(s) 返回 { ret, a, b, cold, note }
+        var Fu_strOps = {
+            length: {
+                btn: '.length', code: 'Fu_str.length',
+                run: function (s) { return { ret: s.length, note: 'length 是属性不是方法，不用加括号。' }; }
+            },
+            charAt: {
+                btn: 'charAt(1)', code: 'Fu_str.charAt(1)',
+                run: function (s) {
+                    var r = s.charAt(1);
+                    return { ret: '"' + r + '"', a: 1, b: 2, note: r ? '取索引 1 的字符；超出范围返回空串 "" 而不报错。' : '索引超出范围，返回空字符串 ""。' };
+                }
+            },
+            indexOf: {
+                btn: "indexOf('9')", code: "Fu_str.indexOf('9')",
+                run: function (s) {
+                    var r = s.indexOf('9');
+                    return { ret: r, a: r, b: r >= 0 ? r + 1 : undefined, note: r >= 0 ? '第一次出现的位置是索引 ' + r + '。' : '找不到返回 -1。' };
+                }
+            },
+            includes: {
+                btn: "includes('傅')", code: "Fu_str.includes('傅')",
+                run: function (s) { return { ret: s.includes('傅'), note: 'includes 判断是否包含子串，返回布尔值。' }; }
+            },
+            slice: {
+                btn: 'slice(0, 5)', code: 'Fu_str.slice(0, 5)',
+                run: function (s) {
+                    var r = s.slice(0, 5);
+                    return { ret: '"' + r + '"', a: 0, b: 5, note: '含头不含尾：取索引 0~4，共 5 个字符，原字符串不变。' };
+                }
+            },
+            substring: {
+                btn: 'substring(6)', code: 'Fu_str.substring(6)',
+                run: function (s) {
+                    var r = s.substring(6);
+                    return { ret: '"' + r + '"', a: 6, b: s.length, note: '只传一个参数表示一直取到末尾。' };
+                }
+            },
+            upper: {
+                btn: 'toUpperCase()', code: 'Fu_str.toUpperCase()',
+                run: function (s) { return { ret: '"' + s.toUpperCase() + '"', note: '字符串不可变：所有方法都返回新字符串，原值永远不变。' }; }
+            },
+            lower: {
+                btn: 'toLowerCase()', code: 'Fu_str.toLowerCase()',
+                run: function (s) { return { ret: '"' + s.toLowerCase() + '"', note: '常用于把用户输入统一成小写再比较。' }; }
+            },
+            replace: {
+                btn: "replace('929','930')", code: "Fu_str.replace('929', '930')",
+                run: function (s) {
+                    var r = s.replace('929', '930');
+                    return { ret: '"' + r + '"', note: 'replace 只替换第一个匹配；要全部替换需用正则 /929/g。' };
+                }
+            },
+            split: {
+                btn: "split(' ')", code: "Fu_str.split(' ')",
+                run: function (s) {
+                    var parts = s.split(' ');
+                    return { ret: '[' + parts.map(function (p) { return '"' + p + '"'; }).join(', ') + ']', note: '按空格拆分成数组——字符串与数组互转的桥梁（配合 join）。' };
+                }
+            },
+            trim: {
+                btn: 'trim()', code: 'Fu_str.trim()',
+                run: function (s) {
+                    var r = s.trim();
+                    return { ret: '"' + r + '"', note: '去掉首尾空格，表单校验前先 trim 是好习惯（试试在输入框两端加空格）。' };
+                }
+            },
+            tpl: {
+                btn: '模板字符串', code: '`我是${Fu_name}，学号 ${Fu_no}`',
+                run: function () {
+                    var Fu_name = '傅若涵', Fu_no = 929;
+                    var r = '我是' + Fu_name + '，学号 ' + Fu_no;
+                    return { ret: '"' + r + '"', note: '模板字符串用反引号包裹，${} 里可以直接写变量甚至表达式，告别 + 号拼接。' };
+                }
+            }
+        };
+
+        var Fu_strGroups = {
+            1: document.getElementById('Fu_strG1'),
+            2: document.getElementById('Fu_strG2')
+        };
+        var Fu_strOrder = { length: 1, charAt: 1, indexOf: 1, includes: 1, slice: 2, substring: 2, upper: 2, lower: 2, replace: 2, split: 2, trim: 2, tpl: 2 };
+
+        Object.keys(Fu_strOps).forEach(function (key) {
+            var op = Fu_strOps[key];
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'Fu_btn';
+            btn.textContent = op.btn;
+            btn.addEventListener('click', function () {
+                var s = Fu_strInput.value;
+                var r = op.run(s);
+                Fu_strShow(op.code, r.ret, r.note);
+                Fu_renderStr(r.a, r.b, r.cold);
+                var all = document.querySelectorAll('.Fu_btn');
+                for (var i = 0; i < all.length; i++) { all[i].classList.remove('Fu_active'); }
+                btn.classList.add('Fu_active');
+            });
+            Fu_strGroups[Fu_strOrder[key]].appendChild(btn);
+        });
+
+        // 输入框实时刷新字符格子
+        Fu_strInput.addEventListener('input', function () {
+            Fu_renderStr();
+            Fu_strCode.textContent = '// 字符串已更新，再次点击方法按钮查看效果';
+        });
+
+        document.getElementById('Fu_strReset').addEventListener('click', function () {
+            Fu_strInput.value = Fu_strDefault;
+            Fu_renderStr();
+            Fu_strCode.textContent = '// 字符串已恢复默认';
+            Fu_strRet.textContent = '返回值将显示在这里';
+            Fu_strNote.textContent = '提示：绿色格子表示方法选中的字符。';
+            var all = document.querySelectorAll('.Fu_btn');
+            for (var i = 0; i < all.length; i++) { all[i].classList.remove('Fu_active'); }
+        });
+
+        Fu_renderObj();
+        Fu_renderStr();
+    </script>
+</body>
+</html>

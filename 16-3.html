@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>16-3 京东风格分类侧栏 · 傅若涵</title>
+    <link rel="stylesheet" href="./font/iconfont.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+            min-height: 100vh;
+            background: #f5f5f5;
+            color: #333;
+            padding: 72px 20px 60px;
+            line-height: 1.75;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .Fu_wrap {
+            max-width: 940px;
+            margin: 0 auto;
+        }
+
+        .Fu_header {
+            text-align: center;
+            margin-bottom: 44px;
+            animation: Fu_fadeUp 0.7s ease both;
+        }
+
+        .Fu_badge {
+            display: inline-block;
+            padding: 5px 16px;
+            border-radius: 2px;
+            font-size: 12px;
+            letter-spacing: 4px;
+            color: #fff;
+            background: #1a1a1a;
+            margin-bottom: 24px;
+        }
+
+        .Fu_header h1 {
+            font-size: 30px;
+            font-weight: 500;
+            letter-spacing: 4px;
+            color: #111;
+        }
+
+        .Fu_header .Fu_sub {
+            margin-top: 12px;
+            font-size: 14px;
+            color: #8a8a8a;
+            letter-spacing: 2px;
+        }
+
+        .Fu_line {
+            width: 56px;
+            height: 1px;
+            margin: 26px auto 0;
+            background: #1a1a1a;
+        }
+
+        /* 模拟京东页面局部：左侧红色渐变边缘 + 白色分类卡片 */
+        .Fu_page {
+            position: relative;
+            max-width: 420px;
+            margin: 0 auto;
+            padding-left: 14px;
+            animation: Fu_fadeUp 0.8s ease both;
+        }
+
+        .Fu_page::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 8px;
+            border-radius: 8px 0 0 8px;
+            background: linear-gradient(180deg, #ff6666, #e2231a);
+        }
+
+        .Fu_panel {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            padding: 26px 28px 24px;
+        }
+
+        .Fu_panel h2 {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #111;
+            margin-bottom: 18px;
+        }
+
+        .Fu_list {
+            list-style: none;
+        }
+
+        .Fu_list li {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 9px 0;
+            font-size: 14.5px;
+            color: #333;
+        }
+
+        .Fu_list li .iconfont {
+            font-size: 19px;
+            color: #3a3a3a;
+            flex: 0 0 auto;
+            transition: color 0.25s ease, transform 0.25s ease;
+        }
+
+        .Fu_list li a {
+            color: #333;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .Fu_list li a:hover {
+            color: #e2231a;
+        }
+
+        .Fu_list li .Fu_sep {
+            color: #999;
+            margin: 0 6px;
+        }
+
+        .Fu_list li:hover .iconfont {
+            color: #e2231a;
+            transform: scale(1.12);
+        }
+
+        .Fu_back {
+            display: inline-block;
+            margin-top: 32px;
+            font-size: 13px;
+            letter-spacing: 1px;
+            color: #555;
+            text-decoration: none;
+            border-bottom: 1px solid #d8d8d8;
+            padding-bottom: 2px;
+            transition: color 0.25s ease, border-color 0.25s ease;
+        }
+
+        .Fu_back:hover {
+            color: #000;
+            border-color: #1a1a1a;
+        }
+
+        .Fu_footer {
+            text-align: center;
+            margin-top: 44px;
+            padding-top: 24px;
+            border-top: 1px solid #e8e8e8;
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: #a8a8a8;
+        }
+
+        @keyframes Fu_fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="Fu_wrap">
+        <header class="Fu_header">
+            <div class="Fu_badge">929 · 傅若涵</div>
+            <h1>京东风格 · 分类侧栏</h1>
+            <p class="Fu_sub">16-3 · iconfont 字体图标 + 列表还原电商分类导航</p>
+            <div class="Fu_line"></div>
+        </header>
+
+        <div class="Fu_page">
+            <div class="Fu_panel">
+                <h2>分类</h2>
+                <ul class="Fu_list">
+                    <li>
+                        <span class="iconfont icon-bingchuan"></span>
+                        <span><a href="javascript:;">冰洗</a><span class="Fu_sep">/</span><a href="javascript:;">空调</a><span class="Fu_sep">/</span><a href="javascript:;">电视</a><span class="Fu_sep">/</span><a href="javascript:;">厨卫大电</a></span>
+                    </li>
+                    <li>
+                        <span class="iconfont icon-langdu"></span>
+                        <span><a href="javascript:;">电脑</a><span class="Fu_sep">/</span><a href="javascript:;">办公</a><span class="Fu_sep">/</span><a href="javascript:;">文具用品</a></span>
+                    </li>
+                    <li>
+                        <span class="iconfont icon-weixin"></span>
+                        <span><a href="javascript:;">手机</a><span class="Fu_sep">/</span><a href="javascript:;">运营商</a><span class="Fu_sep">/</span><a href="javascript:;">数码</a></span>
+                    </li>
+                    <li>
+                        <span class="iconfont icon-bingchuan"></span>
+                        <span><a href="javascript:;">生活电器</a><span class="Fu_sep">/</span><a href="javascript:;">厨房小电</a><span class="Fu_sep">/</span><a href="javascript:;">个护健康</a></span>
+                    </li>
+                    <li>
+                        <span class="iconfont icon-senlin"></span>
+                        <span><a href="javascript:;">食品</a><span class="Fu_sep">/</span><a href="javascript:;">酒类</a><span class="Fu_sep">/</span><a href="javascript:;">生鲜</a><span class="Fu_sep">/</span><a href="javascript:;">特产</a></span>
+                    </li>
+                    <li>
+                        <span class="iconfont icon-laoshu"></span>
+                        <span><a href="javascript:;">美妆</a><span class="Fu_sep">/</span><a href="javascript:;">个护清洁</a><span class="Fu_sep">/</span><a href="javascript:;">宠物</a></span>
+                    </li>
+                    <li>
+                        <span class="iconfont icon-huoshanhui"></span>
+                        <span><a href="javascript:;">元器件</a><span class="Fu_sep">/</span><a href="javascript:;">劳保物资</a><span class="Fu_sep">/</span><a href="javascript:;">五金机电</a></span>
+                    </li>
+                    <li>
+                        <span class="iconfont icon-shouye"></span>
+                        <span><a href="javascript:;">家装</a><span class="Fu_sep">/</span><a href="javascript:;">建材</a><span class="Fu_sep">/</span><a href="javascript:;">家具</a></span>
+                    </li>
+                    <li>
+                        <span class="iconfont icon-shouye"></span>
+                        <span><a href="javascript:;">家居日用</a><span class="Fu_sep">/</span><a href="javascript:;">厨具</a></span>
+                    </li>
+                    <li>
+                        <span class="iconfont icon-haian"></span>
+                        <span><a href="javascript:;">男鞋</a><span class="Fu_sep">/</span><a href="javascript:;">运动</a><span class="Fu_sep">/</span><a href="javascript:;">户外</a></span>
+                    </li>
+                    <li>
+                        <span class="iconfont icon-wode"></span>
+                        <span><a href="javascript:;">男装</a><span class="Fu_sep">/</span><a href="javascript:;">女装</a><span class="Fu_sep">/</span><a href="javascript:;">童装</a><span class="Fu_sep">/</span><a href="javascript:;">内衣</a></span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <a class="Fu_back" href="./index.html">← 返回课堂实践导航</a>
+
+        <footer class="Fu_footer">© 2026 傅若涵 · 学号 929 · 计算机24009 · 高级网页设计</footer>
+    </div>
+</body>
+</html>

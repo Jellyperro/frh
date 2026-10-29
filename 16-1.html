@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>16-1 JavaScript 数组方法可视化 · 傅若涵</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+            min-height: 100vh;
+            background: #fafafa;
+            color: #1a1a1a;
+            padding: 72px 20px 60px;
+            line-height: 1.75;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .Fu_wrap {
+            max-width: 940px;
+            margin: 0 auto;
+        }
+
+        .Fu_header {
+            text-align: center;
+            margin-bottom: 44px;
+            animation: Fu_fadeUp 0.7s ease both;
+        }
+
+        .Fu_badge {
+            display: inline-block;
+            padding: 5px 16px;
+            border-radius: 2px;
+            font-size: 12px;
+            letter-spacing: 4px;
+            color: #fff;
+            background: #1a1a1a;
+            margin-bottom: 24px;
+        }
+
+        .Fu_header h1 {
+            font-size: 30px;
+            font-weight: 500;
+            letter-spacing: 4px;
+            color: #111;
+        }
+
+        .Fu_header .Fu_sub {
+            margin-top: 12px;
+            font-size: 14px;
+            color: #8a8a8a;
+            letter-spacing: 2px;
+        }
+
+        .Fu_line {
+            width: 56px;
+            height: 1px;
+            margin: 26px auto 0;
+            background: #1a1a1a;
+        }
+
+        /* 演示台 */
+        .Fu_stage {
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            padding: 28px 26px 24px;
+            animation: Fu_fadeUp 0.7s ease both;
+        }
+
+        .Fu_stage .Fu_label {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: #b0b0b0;
+            margin-bottom: 14px;
+        }
+
+        .Fu_stage .Fu_label b {
+            color: #1a1a1a;
+        }
+
+        /* 数组盒子 */
+        .Fu_boxes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: flex-end;
+            min-height: 78px;
+            padding: 14px 12px 10px;
+            background: #f7f7f7;
+            border: 1px dashed #d8d8d8;
+            border-radius: 4px;
+        }
+
+        .Fu_cell {
+            min-width: 56px;
+            text-align: center;
+            animation: Fu_fadeUp 0.35s ease both;
+        }
+
+        .Fu_cell .Fu_box {
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1a1a1a;
+            color: #fff;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 4px;
+            transition: background 0.3s ease, transform 0.3s ease;
+        }
+
+        .Fu_cell .Fu_idx {
+            margin-top: 5px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 11px;
+            color: #b0b0b0;
+        }
+
+        .Fu_cell.Fu_hot .Fu_box {
+            background: #0f8a3d;
+            transform: translateY(-4px);
+        }
+
+        .Fu_cell.Fu_cold .Fu_box {
+            background: #c0c0c0;
+            color: #fff;
+        }
+
+        .Fu_empty {
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            color: #b0b0b0;
+        }
+
+        /* 代码与返回值 */
+        .Fu_code {
+            margin-top: 18px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            background: #1a1a1a;
+            color: #f5f5f5;
+            border-radius: 3px;
+            padding: 12px 14px;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .Fu_ret {
+            margin-top: 12px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            color: #3a3a3a;
+            background: #f2f2f2;
+            border: 1px solid #e8e8e8;
+            border-radius: 3px;
+            padding: 10px 14px;
+            min-height: 20px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .Fu_ret b {
+            color: #0f8a3d;
+        }
+
+        .Fu_note {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #8a8a8a;
+        }
+
+        /* 按钮分组 */
+        .Fu_group {
+            margin-top: 22px;
+        }
+
+        .Fu_group .Fu_gt {
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: #8a8a8a;
+            margin-bottom: 10px;
+        }
+
+        .Fu_btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .Fu_btn {
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            padding: 8px 14px;
+            border: 1px solid #d8d8d8;
+            border-radius: 3px;
+            background: #fff;
+            color: #1a1a1a;
+            cursor: pointer;
+            transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+        }
+
+        .Fu_btn:hover {
+            border-color: #1a1a1a;
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        .Fu_btn.Fu_active {
+            border-color: #1a1a1a;
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        .Fu_btn.Fu_reset {
+            border-color: #c0392b;
+            color: #c0392b;
+        }
+
+        .Fu_btn.Fu_reset:hover {
+            background: #c0392b;
+            color: #fff;
+        }
+
+        /* 方法速查表 */
+        .Fu_table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 14px;
+            font-size: 13px;
+        }
+
+        .Fu_table th,
+        .Fu_table td {
+            border: 1px solid #e8e8e8;
+            padding: 8px 10px;
+            text-align: left;
+        }
+
+        .Fu_table th {
+            background: #1a1a1a;
+            color: #fff;
+            font-weight: 500;
+            letter-spacing: 1px;
+            font-size: 12.5px;
+        }
+
+        .Fu_table td:first-child {
+            font-family: Consolas, "Courier New", monospace;
+            color: #111;
+            white-space: nowrap;
+        }
+
+        .Fu_table tr:nth-child(even) td {
+            background: #fafafa;
+        }
+
+        .Fu_yes {
+            color: #c0392b;
+            font-weight: 600;
+        }
+
+        .Fu_no {
+            color: #0f8a3d;
+            font-weight: 600;
+        }
+
+        .Fu_section {
+            margin-top: 36px;
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            padding: 26px 24px 22px;
+            animation: Fu_fadeUp 0.8s ease both;
+        }
+
+        .Fu_section h2 {
+            font-size: 19px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            color: #111;
+        }
+
+        .Fu_section .Fu_desc {
+            font-size: 13.5px;
+            color: #8a8a8a;
+        }
+
+        .Fu_back {
+            display: inline-block;
+            margin-top: 32px;
+            font-size: 13px;
+            letter-spacing: 1px;
+            color: #555;
+            text-decoration: none;
+            border-bottom: 1px solid #d8d8d8;
+            padding-bottom: 2px;
+            transition: color 0.25s ease, border-color 0.25s ease;
+        }
+
+        .Fu_back:hover {
+            color: #000;
+            border-color: #1a1a1a;
+        }
+
+        .Fu_footer {
+            text-align: center;
+            margin-top: 44px;
+            padding-top: 24px;
+            border-top: 1px solid #e8e8e8;
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: #a8a8a8;
+        }
+
+        @keyframes Fu_fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="Fu_wrap">
+        <header class="Fu_header">
+            <div class="Fu_badge">929 · 傅若涵</div>
+            <h1>JavaScript 数组方法可视化</h1>
+            <p class="Fu_sub">16-1 · 增删 / 截取合并 / 迭代三大类方法交互演示</p>
+            <div class="Fu_line"></div>
+        </header>
+
+        <!-- 交互演示台 -->
+        <section class="Fu_stage">
+            <div class="Fu_label">当前数组 <b>Fu_arr</b>（length: <b id="Fu_len">5</b>）· 点击下方按钮执行方法</div>
+            <div class="Fu_boxes" id="Fu_boxes"></div>
+
+            <div class="Fu_code" id="Fu_code">// 点击一个方法按钮，这里会显示对应的代码</div>
+            <div class="Fu_ret" id="Fu_ret">返回值将显示在这里</div>
+            <div class="Fu_note" id="Fu_note">提示：绿色盒子表示新增的元素；被移除的元素会以灰色显示在返回值中。</div>
+
+            <div class="Fu_group">
+                <div class="Fu_gt">一、增删方法（改变原数组）</div>
+                <div class="Fu_btns" id="Fu_g1"></div>
+            </div>
+
+            <div class="Fu_group">
+                <div class="Fu_gt">二、截取与合并（不改变原数组）</div>
+                <div class="Fu_btns" id="Fu_g2"></div>
+            </div>
+
+            <div class="Fu_group">
+                <div class="Fu_gt">三、迭代方法（不改变原数组）</div>
+                <div class="Fu_btns" id="Fu_g3"></div>
+            </div>
+
+            <div class="Fu_group">
+                <div class="Fu_btns">
+                    <button class="Fu_btn Fu_reset" id="Fu_resetBtn" type="button">↺ 重置数组为 [10, 20, 30, 40, 50]</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 速查表 -->
+        <section class="Fu_section">
+            <h2>数组方法速查表</h2>
+            <p class="Fu_desc">傅若涵 · 929 · 是否改变原数组是初学者最容易混淆的知识点</p>
+            <table class="Fu_table">
+                <tr>
+                    <th>方法</th>
+                    <th>作用</th>
+                    <th>返回值</th>
+                    <th>改变原数组？</th>
+                </tr>
+                <tr><td>push()</td><td>末尾添加元素</td><td>新长度</td><td class="Fu_yes">是</td></tr>
+                <tr><td>pop()</td><td>移除末尾元素</td><td>被移除的元素</td><td class="Fu_yes">是</td></tr>
+                <tr><td>shift()</td><td>移除首个元素</td><td>被移除的元素</td><td class="Fu_yes">是</td></tr>
+                <tr><td>unshift()</td><td>开头添加元素</td><td>新长度</td><td class="Fu_yes">是</td></tr>
+                <tr><td>splice()</td><td>任意位置删除 / 插入</td><td>被删除元素组成的数组</td><td class="Fu_yes">是</td></tr>
+                <tr><td>sort()</td><td>排序（默认按字符串）</td><td>排序后的数组（自身）</td><td class="Fu_yes">是</td></tr>
+                <tr><td>reverse()</td><td>倒序排列</td><td>倒序后的数组（自身）</td><td class="Fu_yes">是</td></tr>
+                <tr><td>slice()</td><td>截取子数组</td><td>新数组</td><td class="Fu_no">否</td></tr>
+                <tr><td>concat()</td><td>合并数组</td><td>新数组</td><td class="Fu_no">否</td></tr>
+                <tr><td>join()</td><td>拼接为字符串</td><td>字符串</td><td class="Fu_no">否</td></tr>
+                <tr><td>indexOf() / includes()</td><td>查找元素位置 / 是否存在</td><td>索引 / 布尔值</td><td class="Fu_no">否</td></tr>
+                <tr><td>map()</td><td>逐个映射加工</td><td>新数组</td><td class="Fu_no">否</td></tr>
+                <tr><td>filter()</td><td>筛选满足条件的元素</td><td>新数组</td><td class="Fu_no">否</td></tr>
+                <tr><td>reduce()</td><td>累计归约为一个值</td><td>累计结果</td><td class="Fu_no">否</td></tr>
+                <tr><td>forEach()</td><td>遍历执行操作</td><td>undefined</td><td class="Fu_no">否</td></tr>
+                <tr><td>find() / some() / every()</td><td>查找 / 部分满足 / 全部满足</td><td>元素 / 布尔值</td><td class="Fu_no">否</td></tr>
+            </table>
+        </section>
+
+        <a class="Fu_back" href="./index.html">← 返回课堂实践导航</a>
+
+        <footer class="Fu_footer">© 2026 傅若涵 · 学号 929 · 计算机24009 · 高级网页设计</footer>
+    </div>
+
+    <script>
+        // 初始数组与渲染
+        var Fu_init = [10, 20, 30, 40, 50];
+        var Fu_arr = Fu_init.slice();
+        var Fu_boxes = document.getElementById('Fu_boxes');
+        var Fu_len = document.getElementById('Fu_len');
+        var Fu_code = document.getElementById('Fu_code');
+        var Fu_ret = document.getElementById('Fu_ret');
+        var Fu_note = document.getElementById('Fu_note');
+
+        // 渲染数组盒子，hotIdx 高亮（绿色），coldIdx 置灰（灰色）
+        function Fu_render(hotIdx, coldIdx) {
+            var html = '';
+            for (var i = 0; i < Fu_arr.length; i++) {
+                var cls = 'Fu_cell';
+                if (hotIdx === i) { cls += ' Fu_hot'; }
+                if (coldIdx === i) { cls += ' Fu_cold'; }
+                html += '<div class="' + cls + '">'
+                     +    '<div class="Fu_box">' + Fu_arr[i] + '</div>'
+                     +    '<div class="Fu_idx">[' + i + ']</div>'
+                     +  '</div>';
+            }
+            if (Fu_arr.length === 0) {
+                html = '<div class="Fu_empty">空数组 (length: 0)，试试 push 或 unshift</div>';
+            }
+            Fu_boxes.innerHTML = html;
+            Fu_len.textContent = Fu_arr.length;
+        }
+
+        // 方法注册表：mut=是否改变原数组，code=展示代码，run(a)=执行并返回结果信息
+        var Fu_methods = {
+            // —— 一、增删（改变原数组）——
+            push: {
+                group: 1, mut: true, code: 'Fu_arr.push(66)',
+                desc: 'push：把 66 追加到数组末尾，返回新长度。',
+                run: function (a) { var r = a.push(66); return { ret: r, hot: a.length - 1 }; }
+            },
+            pop: {
+                group: 1, mut: true, code: 'Fu_arr.pop()',
+                desc: 'pop：移除并返回数组最后一个元素。',
+                run: function (a) {
+                    if (a.length === 0) { return { ret: 'undefined', note: '数组已空，pop() 返回 undefined' }; }
+                    var r = a.pop(); return { ret: r, cold: a.length, removed: r };
+                }
+            },
+            shift: {
+                group: 1, mut: true, code: 'Fu_arr.shift()',
+                desc: 'shift：移除并返回数组第一个元素，后面的元素整体前移。',
+                run: function (a) {
+                    if (a.length === 0) { return { ret: 'undefined', note: '数组已空，shift() 返回 undefined' }; }
+                    var r = a.shift(); return { ret: r, removed: r };
+                }
+            },
+            unshift: {
+                group: 1, mut: true, code: 'Fu_arr.unshift(5)',
+                desc: 'unshift：把 5 插入数组开头，返回新长度。',
+                run: function (a) { var r = a.unshift(5); return { ret: r, hot: 0 }; }
+            },
+            splice: {
+                group: 1, mut: true, code: 'Fu_arr.splice(2, 1, 99)',
+                desc: 'splice：从索引 2 开始删除 1 个元素，并在该位置插入 99，返回被删除的元素。',
+                run: function (a) {
+                    if (a.length < 3) { return { ret: '[]', note: '数组长度不足 3，splice(2,1,99) 只能删除到末尾并插入' }; }
+                    var rm = a.splice(2, 1, 99); return { ret: '[' + rm.join(', ') + ']', hot: 2, removed: rm.join(', ') };
+                }
+            },
+            sort: {
+                group: 1, mut: true, code: 'Fu_arr.sort()',
+                desc: 'sort：默认把元素转成字符串再按 Unicode 码排序——所以 10 会排在 2 前面！',
+                run: function (a) {
+                    a.sort(); return { ret: '[' + a.join(', ') + ']', note: '数字排序请用 a.sort(function(a,b){return a-b;})' };
+                }
+            },
+            reverse: {
+                group: 1, mut: true, code: 'Fu_arr.reverse()',
+                desc: 'reverse：把数组元素整体倒序排列。',
+                run: function (a) { a.reverse(); return { ret: '[' + a.join(', ') + ']' }; }
+            },
+
+            // —— 二、截取与合并（不改变原数组）——
+            slice: {
+                group: 2, mut: false, code: 'Fu_arr.slice(1, 3)',
+                desc: 'slice：截取索引 [1, 3) 之间的元素组成新数组，原数组不变。',
+                run: function (a) {
+                    var r = a.slice(1, 3);
+                    return { ret: '[' + r.join(', ') + ']', hot: r.length ? 1 : -1, note: '含头不含尾：索引 1、2，不含 3' };
+                }
+            },
+            concat: {
+                group: 2, mut: false, code: 'Fu_arr.concat([77, 88])',
+                desc: 'concat：把 [77, 88] 合并到末尾生成新数组，原数组不变。',
+                run: function (a) {
+                    var r = a.concat([77, 88]);
+                    return { ret: '[' + r.join(', ') + ']', hot: a.length };
+                }
+            },
+            join: {
+                group: 2, mut: false, code: 'Fu_arr.join(\'-\')',
+                desc: 'join：用 - 把所有元素拼接成一个字符串。',
+                run: function (a) { return { ret: '"' + a.join('-') + '"' }; }
+            },
+            indexOf: {
+                group: 2, mut: false, code: 'Fu_arr.indexOf(30)',
+                desc: 'indexOf：查找 30 第一次出现的索引，找不到返回 -1。',
+                run: function (a) {
+                    var r = a.indexOf(30);
+                    return { ret: r, hot: r >= 0 ? r : -1, note: r >= 0 ? '找到了，在索引 ' + r : '没找到，返回 -1' };
+                }
+            },
+            includes: {
+                group: 2, mut: false, code: 'Fu_arr.includes(40)',
+                desc: 'includes：判断数组是否包含 40，返回 true / false。',
+                run: function (a) { return { ret: a.includes(40) }; }
+            },
+
+            // —— 三、迭代（不改变原数组）——
+            map: {
+                group: 3, mut: false, code: 'Fu_arr.map(function(x){ return x * 2; })',
+                desc: 'map：对每个元素执行加工，返回与原数组等长的新数组。',
+                run: function (a) {
+                    var r = a.map(function (x) { return x * 2; });
+                    return { ret: '[' + r.join(', ') + ']' };
+                }
+            },
+            filter: {
+                group: 3, mut: false, code: 'Fu_arr.filter(function(x){ return x >= 30; })',
+                desc: 'filter：只保留满足 x >= 30 的元素，返回新数组。',
+                run: function (a) {
+                    var r = a.filter(function (x) { return x >= 30; });
+                    return { ret: '[' + r.join(', ') + ']' };
+                }
+            },
+            reduce: {
+                group: 3, mut: false, code: 'Fu_arr.reduce(function(s, x){ return s + x; }, 0)',
+                desc: 'reduce：从初始值 0 开始逐个累加，最终归约为一个总和。',
+                run: function (a) {
+                    var r = a.reduce(function (s, x) { return s + x; }, 0);
+                    return { ret: r };
+                }
+            },
+            forEach: {
+                group: 3, mut: false, code: 'Fu_arr.forEach(function(x, i){ log(i + "号是" + x); })',
+                desc: 'forEach：依次遍历每个元素执行操作，没有返回值（undefined）。',
+                run: function (a) {
+                    var lines = [];
+                    a.forEach(function (x, i) { lines.push('  ' + i + '号是 ' + x); });
+                    return { ret: lines.length ? '\n' + lines.join('\n') : 'undefined（空数组，什么也没执行）' };
+                }
+            },
+            find: {
+                group: 3, mut: false, code: 'Fu_arr.find(function(x){ return x > 20; })',
+                desc: 'find：返回第一个满足 x > 20 的元素，找不到返回 undefined。',
+                run: function (a) {
+                    var r = a.find(function (x) { return x > 20; });
+                    return { ret: r === undefined ? 'undefined' : r };
+                }
+            },
+            someEvery: {
+                group: 3, mut: false, code: 'Fu_arr.some(x > 40)  /  Fu_arr.every(x > 0)',
+                desc: 'some：只要有元素大于 40 就返回 true；every：必须全部大于 0 才返回 true。',
+                run: function (a) {
+                    var s = a.some(function (x) { return x > 40; });
+                    var e = a.every(function (x) { return x > 0; });
+                    return { ret: 'some → ' + s + '，every → ' + e };
+                }
+            }
+        };
+
+        // 按钮分组与文案
+        var Fu_btnText = {
+            push: 'push(66)', pop: 'pop()', shift: 'shift()', unshift: 'unshift(5)',
+            splice: 'splice(2,1,99)', sort: 'sort()', reverse: 'reverse()',
+            slice: 'slice(1,3)', concat: 'concat([77,88])', join: "join('-')",
+            indexOf: 'indexOf(30)', includes: 'includes(40)',
+            map: 'map(x*2)', filter: 'filter(x>=30)', reduce: 'reduce(+)',
+            forEach: 'forEach', find: 'find(x>20)', someEvery: 'some / every'
+        };
+
+        var Fu_groups = {
+            1: document.getElementById('Fu_g1'),
+            2: document.getElementById('Fu_g2'),
+            3: document.getElementById('Fu_g3')
+        };
+
+        Object.keys(Fu_methods).forEach(function (key) {
+            var m = Fu_methods[key];
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'Fu_btn';
+            btn.textContent = Fu_btnText[key];
+            if (m.mut) { btn.title = '该方法会改变原数组'; }
+            btn.addEventListener('click', function () { Fu_exec(key, btn); });
+            Fu_groups[m.group].appendChild(btn);
+        });
+
+        function Fu_exec(key, btn) {
+            var m = Fu_methods[key];
+            var before = Fu_arr.join(',');
+            var info = m.run(Fu_arr);
+
+            // 更新代码与返回值
+            Fu_code.textContent = m.code;
+            Fu_ret.innerHTML = '返回值: <b>' + info.ret + '</b>';
+            Fu_note.textContent = m.desc + (info.note ? '　—— ' + info.note : '');
+
+            // 若原数组确实被修改，整行高亮提示
+            if (m.mut && Fu_arr.join(',') !== before) {
+                Fu_note.textContent += '　（原数组已被修改）';
+            }
+
+            // 渲染：mut 方法高亮新增位置，非 mut 方法在返回值里展示新数组
+            Fu_render(info.hot !== undefined ? info.hot : -1, info.cold !== undefined ? info.cold : -1);
+
+            // 按钮激活态
+            var all = document.querySelectorAll('.Fu_btn');
+            for (var i = 0; i < all.length; i++) { all[i].classList.remove('Fu_active'); }
+            btn.classList.add('Fu_active');
+        }
+
+        // 重置
+        document.getElementById('Fu_resetBtn').addEventListener('click', function () {
+            Fu_arr = Fu_init.slice();
+            Fu_render(-1, -1);
+            Fu_code.textContent = '// 数组已重置为 [10, 20, 30, 40, 50]';
+            Fu_ret.textContent = '返回值将显示在这里';
+            Fu_note.textContent = '提示：绿色盒子表示新增的元素；被移除的元素会以灰色显示在返回值中。';
+            var all = document.querySelectorAll('.Fu_btn');
+            for (var i = 0; i < all.length; i++) { all[i].classList.remove('Fu_active'); }
+        });
+
+        Fu_render(-1, -1);
+    </script>
+</body>
+</html>

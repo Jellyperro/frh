@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>16-4 Tab 选项卡 · 傅若涵</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "SimSun", "宋体", serif;
+            min-height: 100vh;
+            background: #f5f5f5;
+            color: #000;
+            padding: 72px 20px 60px;
+            line-height: 1.75;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .Fu_wrap {
+            max-width: 940px;
+            margin: 0 auto;
+        }
+
+        .Fu_header {
+            text-align: center;
+            margin-bottom: 44px;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            animation: Fu_fadeUp 0.7s ease both;
+        }
+
+        .Fu_badge {
+            display: inline-block;
+            padding: 5px 16px;
+            border-radius: 2px;
+            font-size: 12px;
+            letter-spacing: 4px;
+            color: #fff;
+            background: #1a1a1a;
+            margin-bottom: 24px;
+        }
+
+        .Fu_header h1 {
+            font-size: 30px;
+            font-weight: 500;
+            letter-spacing: 4px;
+            color: #111;
+        }
+
+        .Fu_header .Fu_sub {
+            margin-top: 12px;
+            font-size: 14px;
+            color: #8a8a8a;
+            letter-spacing: 2px;
+        }
+
+        .Fu_line {
+            width: 56px;
+            height: 1px;
+            margin: 26px auto 0;
+            background: #1a1a1a;
+        }
+
+        /* ===== Tab 选项卡组件 ===== */
+        .Fu_tabbox {
+            max-width: 400px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 10px 14px 12px;
+            border: 1px solid #e0e0e0;
+            animation: Fu_fadeUp 0.8s ease both;
+        }
+
+        .Fu_tabs {
+            display: flex;
+            margin-bottom: 12px;
+            border: 1px solid #cc0000;
+        }
+
+        .Fu_tab {
+            flex: 1;
+            text-align: center;
+            padding: 4px 0;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: "Microsoft YaHei", sans-serif;
+            letter-spacing: 1px;
+            color: #000;
+            background: #fff;
+            cursor: pointer;
+            user-select: none;
+            border-left: 1px solid #cc0000;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+
+        .Fu_tab:first-child {
+            border-left: none;
+        }
+
+        /* 选中：红底白字 */
+        .Fu_tab.Fu_on {
+            background: #cc0000;
+            color: #fff;
+        }
+
+        /* 悬停未选中：红字 */
+        .Fu_tab:hover {
+            color: #cc0000;
+        }
+
+        .Fu_tab.Fu_on:hover {
+            color: #fff;
+        }
+
+        /* 内容列表 */
+        .Fu_panel {
+            display: none;
+        }
+
+        .Fu_panel.Fu_on {
+            display: block;
+            animation: Fu_fadeUp 0.3s ease both;
+        }
+
+        .Fu_panel li {
+            list-style: none;
+            font-size: 13px;
+            color: #000;
+            padding: 3px 0 3px 14px;
+            position: relative;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .Fu_panel li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 13px;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #000;
+        }
+
+        .Fu_panel li a {
+            color: #000;
+            text-decoration: none;
+            transition: color 0.15s ease;
+        }
+
+        .Fu_panel li a:hover {
+            color: #cc0000;
+            text-decoration: underline;
+        }
+
+        .Fu_back {
+            display: block;
+            width: max-content;
+            margin: 32px auto 0;
+            font-family: "Microsoft YaHei", sans-serif;
+            font-size: 13px;
+            letter-spacing: 1px;
+            color: #555;
+            text-decoration: none;
+            border-bottom: 1px solid #d8d8d8;
+            padding-bottom: 2px;
+            transition: color 0.25s ease, border-color 0.25s ease;
+        }
+
+        .Fu_back:hover {
+            color: #000;
+            border-color: #1a1a1a;
+        }
+
+        .Fu_footer {
+            text-align: center;
+            margin-top: 44px;
+            padding-top: 24px;
+            border-top: 1px solid #e8e8e8;
+            font-family: "Microsoft YaHei", sans-serif;
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: #a8a8a8;
+        }
+
+        @keyframes Fu_fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="Fu_wrap">
+        <header class="Fu_header">
+            <div class="Fu_badge">929 · 傅若涵</div>
+            <h1>旅游投诉 · Tab 选项卡</h1>
+            <p class="Fu_sub">16-4 · 点击「最新投诉 / 官方回应 / 追踪调查」切换对应新闻列表</p>
+            <div class="Fu_line"></div>
+        </header>
+
+        <div class="Fu_tabbox">
+            <div class="Fu_tabs" id="Fu_tabs">
+                <div class="Fu_tab Fu_on" data-fu-index="0">最新投诉</div>
+                <div class="Fu_tab" data-fu-index="1">官方回应</div>
+                <div class="Fu_tab" data-fu-index="2">追踪调查</div>
+            </div>
+            <div class="Fu_panels" id="Fu_panels">
+                <ul class="Fu_panel Fu_on">
+                    <li><a href="javascript:;">北京火车站出租车乱调查 司机称计价器坏</a></li>
+                    <li><a href="javascript:;">公园仙人掌刻字"毁容" 一棵仙人掌被刻死</a></li>
+                    <li><a href="javascript:;">昆明低价旅游"宰客" 网友求助 (组图)</a></li>
+                    <li><a href="javascript:;">四川一星级酒店公开区域4年未开放变"茶楼"</a></li>
+                    <li><a href="javascript:;">北京北海公园暗藏高端会所 园方称"不知情"</a></li>
+                    <li><a href="javascript:;">北京北海金丝楠木柱遭英文字母"签名"破坏</a></li>
+                    <li><a href="javascript:;">北京动物园"黑导游"猖獗 低价门票藏"猫腻"</a></li>
+                    <li><a href="javascript:;">女子不满"无购物"投诉旅行社 钱一样没少花</a></li>
+                    <li><a href="javascript:;">老年人团游权益受损 旅行社"嫌弃"老人</a></li>
+                </ul>
+                <ul class="Fu_panel">
+                    <li><a href="javascript:;">大黄鸭、山寨鸭惹热闹 专家解读"山寨鸭"是非</a></li>
+                    <li><a href="javascript:;">国家旅游局回应涨价："组团游价格属正常"</a></li>
+                    <li><a href="javascript:;">国家旅游局回应"新旅游法实施后旅行社团费涨"</a></li>
+                    <li><a href="javascript:;">出游遇纠纷可依《旅游法》维权 明确旅行社投诉渠道</a></li>
+                    <li><a href="javascript:;">解读新旅游法"误传" 扫货族可安心</a></li>
+                    <li><a href="javascript:;">《旅游法》将抑制"零负团费"和"门票经济"</a></li>
+                    <li><a href="javascript:;">文明旅游将纳入旅游合同 为导游和公约作保障</a></li>
+                    <li><a href="javascript:;">天津二季度旅游服务质量发布 涉景区及8家旅行社</a></li>
+                    <li><a href="javascript:;">敦煌：国家法定节假日所有售票景区免票开放</a></li>
+                </ul>
+                <ul class="Fu_panel">
+                    <li><a href="javascript:;">《旅游法》实施半月 部分景区遭遇"一日游"之变</a></li>
+                    <li><a href="javascript:;">追踪香格里拉旅游"辱客"：涉事导游等已受处理</a></li>
+                    <li><a href="javascript:;">导游辱客"吃相"难看：整肃旅行社自律</a></li>
+                    <li><a href="javascript:;">九寨沟为何变成"死胡同"？——数千游客滞留</a></li>
+                    <li><a href="javascript:;">九寨沟为何出现游客滞留？</a></li>
+                    <li><a href="javascript:;">旅游足迹"留"进世博博物馆 女士超规格邀进</a></li>
+                    <li><a href="javascript:;">记者暗访兵马俑景区：玉器店买玉 近期门票上涨</a></li>
+                    <li><a href="javascript:;">假冒游客借卡转账 两女子诱骗女大学生</a></li>
+                    <li><a href="javascript:;">39家旅游单位违法被罚1800万 购物店结盟绕监管</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <a class="Fu_back" href="./index.html">← 返回课堂实践导航</a>
+
+        <footer class="Fu_footer">© 2026 傅若涵 · 学号 929 · 计算机24009 · 高级网页设计</footer>
+    </div>
+
+    <script>
+        // Tab 切换：点击标签 → 对应面板显示，其余隐藏
+        var Fu_tabs = document.querySelectorAll('#Fu_tabs .Fu_tab');
+        var Fu_panels = document.querySelectorAll('#Fu_panels .Fu_panel');
+
+        for (var i = 0; i < Fu_tabs.length; i++) {
+            Fu_tabs[i].addEventListener('click', function () {
+                var idx = this.getAttribute('data-fu-index');
+                for (var j = 0; j < Fu_tabs.length; j++) {
+                    Fu_tabs[j].classList.remove('Fu_on');
+                    Fu_panels[j].classList.remove('Fu_on');
+                }
+                this.classList.add('Fu_on');
+                Fu_panels[idx].classList.add('Fu_on');
+            });
+        }
+    </script>
+</body>
+</html>
