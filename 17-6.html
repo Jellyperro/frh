@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>17-6 Promise · 包饺子异步流程 · 傅若涵</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+            background: #fafafa;
+            color: #1a1a1a;
+            padding: 72px 20px 60px;
+            line-height: 1.75;
+            -webkit-font-smoothing: antialiased;
+        }
+        .Fu_wrap { max-width: 940px; margin: 0 auto; }
+
+        .Fu_header { text-align: center; margin-bottom: 44px; animation: Fu_fadeUp 0.7s ease both; }
+        .Fu_badge { display: inline-block; padding: 5px 16px; border-radius: 2px; font-size: 12px; letter-spacing: 4px; color: #fff; background: #1a1a1a; margin-bottom: 24px; }
+        .Fu_header h1 { font-size: 30px; font-weight: 500; letter-spacing: 4px; color: #111; }
+        .Fu_header .Fu_sub { margin-top: 12px; font-size: 14px; color: #8a8a8a; letter-spacing: 2px; }
+        .Fu_line { width: 56px; height: 1px; margin: 26px auto 0; background: #1a1a1a; }
+
+        /* 流程说明 */
+        .Fu_roadmap {
+            background: #fff; border: 1px solid #e8e8e8; border-radius: 4px; padding: 22px 26px;
+            animation: Fu_fadeUp 0.75s ease both; margin-bottom: 22px;
+        }
+        .Fu_roadmap h2 { font-size: 13px; font-weight: 600; letter-spacing: 3px; color: #8a8a8a; margin-bottom: 12px; }
+        .Fu_flow {
+            display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px 8px;
+            font-size: 13px; color: #3a3a3a;
+        }
+        .Fu_flow .Fu_box {
+            padding: 4px 10px; border: 1px solid #e0e0e0; border-radius: 2px; background: #fafafa;
+        }
+        .Fu_flow .Fu_box code { font-family: Consolas, "Courier New", monospace; font-size: 12px; color: #cc0000; }
+        .Fu_flow .Fu_arrow { color: #b0b0b0; font-weight: 700; }
+        .Fu_flow .Fu_group {
+            display: inline-flex; flex-direction: column; align-items: center; gap: 4px;
+            padding: 6px 10px; border: 1px dashed #999; border-radius: 3px;
+        }
+        .Fu_flow .Fu_group small { font-size: 10px; color: #8a8a8a; letter-spacing: 1px; }
+
+        /* 时间条 */
+        .Fu_timeline {
+            background: #fff; border: 1px solid #e8e8e8; border-radius: 4px; padding: 24px 26px;
+            animation: Fu_fadeUp 0.8s ease both;
+        }
+        .Fu_timeline h2 { font-size: 13px; font-weight: 600; letter-spacing: 3px; color: #8a8a8a; margin-bottom: 16px; }
+
+        .Fu_step {
+            display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px dashed #eee;
+            opacity: 0.45; transition: opacity 0.25s ease;
+        }
+        .Fu_step.Fu_running, .Fu_step.Fu_done { opacity: 1; }
+        .Fu_step:last-child { border-bottom: none; }
+
+        .Fu_node {
+            flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 700; color: #fff; background: #b0b0b0;
+            transition: background 0.25s ease, transform 0.25s ease;
+        }
+        .Fu_step.Fu_running .Fu_node {
+            background: #cc0000; animation: Fu_pulse 1.2s infinite; transform: scale(1.05);
+        }
+        .Fu_step.Fu_done .Fu_node { background: #0f8a3d; }
+
+        .Fu_body { flex: 1; min-width: 0; }
+        .Fu_name { font-size: 14.5px; font-weight: 600; color: #111; }
+        .Fu_meta { font-family: Consolas, "Courier New", monospace; font-size: 11.5px; color: #8a8a8a; margin-top: 2px; }
+        .Fu_desc { font-size: 13px; color: #555; margin-top: 4px; line-height: 1.6; }
+
+        /* 并行组内进度 */
+        .Fu_subSteps { display: flex; gap: 14px; margin-top: 8px; }
+        .Fu_sub {
+            flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid #eee; border-radius: 3px;
+            font-size: 12.5px; font-family: Consolas, "Courier New", monospace; color: #8a8a8a;
+        }
+        .Fu_sub.Fu_on { border-color: #cc0000; color: #cc0000; background: #fdf2f2; }
+        .Fu_sub.Fu_ok { border-color: #0f8a3d; color: #0f8a3d; background: #f2faf5; }
+        .Fu_sub.Fu_no { border-color: #eee; color: #8a8a8a; }
+
+        /* 按钮区 */
+        .Fu_action { display: flex; gap: 10px; margin: 18px 0; animation: Fu_fadeUp 0.85s ease both; }
+        .Fu_btn {
+            font-size: 13px; font-weight: 600; letter-spacing: 1px; padding: 9px 24px;
+            border-radius: 2px; cursor: pointer; border: 1px solid #1a1a1a;
+            transition: background 0.18s ease, color 0.18s ease;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+        .Fu_btnOn { background: #1a1a1a; color: #fff; }
+        .Fu_btnOn:hover:not(:disabled) { background: #333; }
+        .Fu_btnOff { background: #fff; color: #1a1a1a; }
+        .Fu_btnOff:hover:not(:disabled) { background: #1a1a1a; color: #fff; }
+        .Fu_btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        /* 核心逻辑代码面板 */
+        .Fu_codePanel {
+            margin-top: 22px; background: #fff; border: 1px solid #e8e8e8; border-radius: 4px;
+            animation: Fu_fadeUp 0.95s ease both;
+        }
+        .Fu_codePanel .Fu_panelHead {
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+            border-bottom: 1px solid #e8e8e8; padding: 12px 20px; gap: 8px;
+        }
+        .Fu_codePanel h2 { font-size: 13px; font-weight: 600; letter-spacing: 3px; color: #8a8a8a; margin: 0; }
+        .Fu_codePanel .Fu_codeTabs { display: flex; gap: 2px; }
+        .Fu_codePanel .Fu_codeTab {
+            font-family: Consolas, "Courier New", monospace; font-size: 12px;
+            padding: 4px 14px; border: 1px solid #e0e0e0; border-radius: 2px;
+            background: #f7f7f7; color: #555; cursor: pointer; letter-spacing: 0.5px;
+            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        }
+        .Fu_codePanel .Fu_codeTab.Fu_on { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+        .Fu_codePanel .Fu_codeTab:hover:not(.Fu_on) { border-color: #1a1a1a; color: #1a1a1a; }
+        .Fu_codeBlock { display: none; background: #1a1a1a; border-radius: 0 0 4px 4px; padding: 20px 22px; max-height: 460px; overflow: auto; }
+        .Fu_codeBlock.Fu_on { display: block; }
+        .Fu_codeBlock pre {
+            font-family: Consolas, "Courier New", monospace; font-size: 12.5px;
+            color: #e6edf3; white-space: pre; line-height: 1.72;
+        }
+        .Fu_codeBlock .Fu_cmt { color: #8b949e; }
+        .Fu_codeBlock .Fu_kw  { color: #ff7b72; }
+        .Fu_codeBlock .Fu_fn  { color: #d2a8ff; }
+        .Fu_codeBlock .Fu_s   { color: #a5d6ff; }
+        .Fu_codeBlock .Fu_n   { color: #79c0ff; }
+        .Fu_codeBlock .Fu_f   { color: #7ee787; }
+
+        /* 日志 */
+        .Fu_logBox { margin-top: 22px; background: #1a1a1a; border-radius: 4px; padding: 16px 18px; animation: Fu_fadeUp 0.9s ease both; }
+        .Fu_logBox h2 { font-size: 13px; font-weight: 600; letter-spacing: 3px; color: #8a8a8a; margin-bottom: 10px; }
+        .Fu_log { font-family: Consolas, "Courier New", monospace; font-size: 12.5px; color: #7ee787; max-height: 200px; overflow: auto; white-space: pre-wrap; }
+
+        @keyframes Fu_pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(204,0,0,0.5); }
+            50%      { box-shadow: 0 0 0 10px rgba(204,0,0,0); }
+        }
+        @keyframes Fu_fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+        .Fu_footer { text-align: center; margin-top: 52px; padding-top: 24px; border-top: 1px solid #e8e8e8; font-size: 12px; letter-spacing: 2px; color: #a8a8a8; }
+    </style>
+</head>
+<body>
+    <div class="Fu_wrap">
+        <header class="Fu_header">
+            <div class="Fu_badge">929 · 傅若涵</div>
+            <h1>Promise · 包饺子异步流程</h1>
+            <p class="Fu_sub">Promise.any 并集 · Promise.all 交集 · async/await 串联</p>
+            <div class="Fu_line"></div>
+        </header>
+
+        <section class="Fu_roadmap">
+            <h2>流程图（Promise 模式标注）</h2>
+            <div class="Fu_flow">
+                <span>下单买原料</span><span class="Fu_arrow">→</span>
+                <span class="Fu_group">
+                    <span>线上 6s</span><span class="Fu_arrow" style="transform:rotate(90deg);">↑</span>
+                    <small>Promise.any</small><span>线下 6s</span>
+                </span>
+                <span class="Fu_arrow">→</span>
+                <span>取原料 1s</span><span class="Fu_arrow">→</span>
+                <span class="Fu_group">
+                    <small>Promise.all</small>
+                    <span>和面 4s</span><span>和馅 5s</span>
+                </span>
+                <span class="Fu_arrow">→</span>
+                <span>包饺子 5s</span><span class="Fu_arrow">→</span>
+                <span>煮饺子 3s</span><span class="Fu_arrow">→</span>
+                <span><strong>吃饺子 🥟</strong></span>
+            </div>
+        </section>
+
+        <div class="Fu_action">
+            <button class="Fu_btn Fu_btnOn" id="Fu_btnRun">开始包饺子流程</button>
+            <button class="Fu_btn Fu_btnOff" id="Fu_btnReset">重置</button>
+        </div>
+
+        <section class="Fu_timeline">
+            <h2>执行进度</h2>
+
+            <div class="Fu_step" data-step="buy">
+                <div class="Fu_node">①</div>
+                <div class="Fu_body">
+                    <div class="Fu_name">买原料（线上 + 线下 并行，任意一个完成即可）</div>
+                    <div class="Fu_meta">Promise.any([网上下单, 线下采购]) · 6s × 2</div>
+                    <div class="Fu_desc">傅若涵同时在美团买菜下单，又去菜市场买，谁先送 / 谁先回都可以继续下一步。</div>
+                    <div class="Fu_subSteps">
+                        <div class="Fu_sub Fu_no" data-sub="buy_online">⏳ 线上：美团买菜 下单中...</div>
+                        <div class="Fu_sub Fu_no" data-sub="buy_offline">⏳ 线下：菜市场 采购中...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="Fu_step" data-step="pick">
+                <div class="Fu_node">②</div>
+                <div class="Fu_body">
+                    <div class="Fu_name">取原料</div>
+                    <div class="Fu_meta">await · 1s</div>
+                    <div class="Fu_desc">拿回面粉、猪肉、韭菜、姜蒜等，放厨房。</div>
+                </div>
+            </div>
+
+            <div class="Fu_step" data-step="prep">
+                <div class="Fu_node">③</div>
+                <div class="Fu_body">
+                    <div class="Fu_name">和面 + 和馅（两个都要完成才能包）</div>
+                    <div class="Fu_meta">Promise.all([和面, 和馅]) · 4s + 5s</div>
+                    <div class="Fu_desc">一边揉面一边剁馅，两条流水线并行；两边都好才能开始包。</div>
+                    <div class="Fu_subSteps">
+                        <div class="Fu_sub Fu_no" data-sub="dough">⏳ 和面中...</div>
+                        <div class="Fu_sub Fu_no" data-sub="filling">⏳ 和馅中...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="Fu_step" data-step="wrap">
+                <div class="Fu_node">④</div>
+                <div class="Fu_body">
+                    <div class="Fu_name">包饺子</div>
+                    <div class="Fu_meta">await · 5s</div>
+                    <div class="Fu_desc">擀皮、放馅、捏褶，一盘一盘码好。</div>
+                </div>
+            </div>
+
+            <div class="Fu_step" data-step="boil">
+                <div class="Fu_node">⑤</div>
+                <div class="Fu_body">
+                    <div class="Fu_name">煮饺子</div>
+                    <div class="Fu_meta">await · 3s</div>
+                    <div class="Fu_desc">水沸腾下锅，煮到浮起加凉水，再开两次关火。</div>
+                </div>
+            </div>
+
+            <div class="Fu_step" data-step="eat">
+                <div class="Fu_node">⑥</div>
+                <div class="Fu_body">
+                    <div class="Fu_name">吃饺子 🥟</div>
+                    <div class="Fu_meta">await · 2s</div>
+                    <div class="Fu_desc">蘸上醋，开吃！</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="Fu_codePanel">
+            <div class="Fu_panelHead">
+                <h2>核心逻辑（可切换查看）</h2>
+                <div class="Fu_codeTabs" id="Fu_codeTabs">
+                    <span class="Fu_codeTab Fu_on" data-tab="delay">Fu_delay 封装</span>
+                    <span class="Fu_codeTab" data-tab="main">主流程 async</span>
+                    <span class="Fu_codeTab" data-tab="any">Promise.any Polyfill</span>
+                </div>
+            </div>
+            <div class="Fu_codeBlock Fu_on" id="Fu_block_delay"><pre></pre></div>
+            <div class="Fu_codeBlock" id="Fu_block_main"><pre></pre></div>
+            <div class="Fu_codeBlock" id="Fu_block_any"><pre></pre></div>
+        </section>
+
+        <section class="Fu_logBox">
+            <h2>流程日志</h2>
+            <div class="Fu_log" id="Fu_log"></div>
+        </section>
+
+        <footer class="Fu_footer">© 2026 傅若涵 · 学号 929 · 高级网页设计</footer>
+    </div>
+
+    <script>
+        // ======== UI 工具 ========
+        const Fu_steps = document.querySelectorAll(".Fu_step");
+        const Fu_btnRun = document.getElementById("Fu_btnRun");
+        const Fu_btnReset = document.getElementById("Fu_btnReset");
+        const Fu_log = document.getElementById("Fu_log");
+        let Fu_logLines = [];
+
+        function Fu_addLog(Fu_text) {
+            const Fu_now = new Date();
+            const Fu_pad = function (Fu_n) { return Fu_n < 10 ? "0" + Fu_n : Fu_n; };
+            const Fu_ts = Fu_pad(Fu_now.getHours()) + ":" + Fu_pad(Fu_now.getMinutes()) + ":" + Fu_pad(Fu_now.getSeconds());
+            Fu_logLines.unshift("[" + Fu_ts + "] " + Fu_text);
+            Fu_log.textContent = Fu_logLines.slice(0, 60).join("\n");
+            console.log("傅若涵 17-6:", Fu_text);
+        }
+
+        function Fu_setStep(Fu_key, Fu_state) {
+            Fu_steps.forEach(function (Fu_s) {
+                if (Fu_s.getAttribute("data-step") === Fu_key) {
+                    Fu_s.classList.remove("Fu_running", "Fu_done");
+                    if (Fu_state === "running") Fu_s.classList.add("Fu_running");
+                    if (Fu_state === "done") Fu_s.classList.add("Fu_done");
+                }
+            });
+        }
+
+        function Fu_setSub(Fu_key, Fu_state, Fu_text) {
+            const Fu_el = document.querySelector('[data-sub="' + Fu_key + '"]');
+            if (!Fu_el) return;
+            Fu_el.classList.remove("Fu_no", "Fu_on", "Fu_ok");
+            if (Fu_state === "running") Fu_el.classList.add("Fu_on");
+            if (Fu_state === "done") Fu_el.classList.add("Fu_ok");
+            if (Fu_state === "idle") Fu_el.classList.add("Fu_no");
+            Fu_el.textContent = Fu_text;
+        }
+
+        function Fu_resetUI() {
+            Fu_steps.forEach(function (Fu_s) { Fu_s.classList.remove("Fu_running", "Fu_done"); });
+            Fu_setSub("buy_online", "idle", "⏳ 线上：美团买菜 下单中...");
+            Fu_setSub("buy_offline", "idle", "⏳ 线下：菜市场 采购中...");
+            Fu_setSub("dough", "idle", "⏳ 和面中...");
+            Fu_setSub("filling", "idle", "⏳ 和馅中...");
+            Fu_logLines = [];
+            Fu_log.textContent = "";
+        }
+
+        // ======== 核心 Promise 封装：用 setTimeout 模拟耗时 ========
+        // 返回 Promise 的函数 = 契约：谁 await 都能等它真实完成
+        function Fu_delay(Fu_ms, Fu_subKey, Fu_startMsg, Fu_doneMsg) {
+            return new Promise(function (Fu_resolve) {
+                if (Fu_subKey) Fu_setSub(Fu_subKey, "running", Fu_startMsg);
+                Fu_addLog(Fu_startMsg + "（耗时 " + Fu_ms + "ms）");
+                setTimeout(function () {
+                    if (Fu_subKey) Fu_setSub(Fu_subKey, "done", Fu_doneMsg);
+                    Fu_addLog("✓ " + Fu_doneMsg);
+                    Fu_resolve();
+                }, Fu_ms);
+            });
+        }
+
+        // ======== 包饺子主流程：async/await 串联 + Promise 聚合 ========
+        async function Fu_makeDumplings() {
+            Fu_btnRun.disabled = true;
+            Fu_resetUI();
+            Fu_addLog("=== 包饺子流程开始 ===");
+
+            // ① Promise.any：线上线下同时下单，谁先完成都算买到了
+            Fu_setStep("buy", "running");
+            Fu_addLog("① 下单买原料：同时启动线上美团和线下菜市场");
+
+            const Fu_online  = Fu_delay(6000, "buy_online",  "线上美团 下单中...",  "线上美团 已送达");
+            const Fu_offline = Fu_delay(6000, "buy_offline", "线下菜市场 采购中...", "线下菜市场 已回家");
+
+            // Promise.any：第一个 resolve 就继续（注意：浏览器较老可能不支持 any，做 polyfill）
+            const Fu_buyAny = Fu_promiseAny(Fu_online, Fu_offline);
+            await Fu_buyAny;
+
+            Fu_setStep("buy", "done");
+            Fu_addLog("✓ 原料已到，进入下一步");
+
+            // ② 取原料
+            Fu_setStep("pick", "running");
+            await Fu_delay(1000, null, "② 取原料中...", "原料已放到厨房");
+            Fu_setStep("pick", "done");
+
+            // ③ Promise.all：和面 + 和馅，两个都好才能包
+            Fu_setStep("prep", "running");
+            Fu_addLog("③ 并行处理：和面 + 和馅，两个都完成才能包");
+
+            const Fu_dough   = Fu_delay(4000, "dough",   "和面中...", "面团揉好了");
+            const Fu_filling = Fu_delay(5000, "filling", "和馅中...", "馅拌好了");
+
+            await Promise.all([Fu_dough, Fu_filling]);
+            Fu_setStep("prep", "done");
+            Fu_addLog("✓ 面团和馅都就绪");
+
+            // ④ 包饺子
+            Fu_setStep("wrap", "running");
+            await Fu_delay(5000, null, "④ 包饺子中...", "一盘盘饺子码好了");
+            Fu_setStep("wrap", "done");
+
+            // ⑤ 煮饺子
+            Fu_setStep("boil", "running");
+            await Fu_delay(3000, null, "⑤ 煮饺子中...", "饺子浮起来了");
+            Fu_setStep("boil", "done");
+
+            // ⑥ 吃饺子
+            Fu_setStep("eat", "running");
+            await Fu_delay(2000, null, "⑥ 吃饺子中...", "吃撑啦 🥟");
+            Fu_setStep("eat", "done");
+
+            Fu_addLog("=== 全部完成！傅若涵吃到了热腾腾的饺子 ===");
+            Fu_btnRun.disabled = false;
+        }
+
+        // Promise.any polyfill（兼容老浏览器；现代浏览器内置则不会进入这个分支）
+        function Fu_promiseAny() {
+            const Fu_inputs = Array.from(arguments);
+            if (typeof Promise.any === "function") return Promise.any(Fu_inputs);
+            // 简易 polyfill：取第一个 resolve
+            return new Promise(function (Fu_resolve) {
+                Fu_inputs.forEach(function (Fu_p) {
+                    Promise.resolve(Fu_p).then(Fu_resolve);
+                });
+            });
+        }
+
+        // ======== 核心逻辑代码面板：Tab 切换 + 代码渲染 ========
+        function Fu_highlight(Fu_src) {
+            // 简易语法高亮：注释 / 关键字 / 函数 / 字符串 / 数字 / 常量
+            let Fu_html = Fu_src
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/(\/\*[\s\S]*?\*\/|\/\/[^\n]*)/g, '<span class="Fu_cmt">$1</span>')
+                .replace(/\b(async|await|new|function|return|const|let|var|if|else|Promise|setTimeout|clearTimeout|setInterval|clearInterval)\b/g, '<span class="Fu_kw">$1</span>')
+                .replace(/("[^"\\]*"|'[^'\\]*')/g, '<span class="Fu_s">$1</span>')
+                .replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="Fu_n">$1</span>')
+                .replace(/\b(true|false|null|undefined)\b/g, '<span class="Fu_kw">$1</span>')
+                .replace(/(Fu_delay|Fu_makeDumplings|Fu_promiseAny|Fu_resolve|Fu_reject)\b/g, '<span class="Fu_fn">$1</span>');
+            return Fu_html;
+        }
+
+        const Fu_srcDelay = `// 返回 Promise 的函数 = 契约：谁 await 都能等它真实完成
+function Fu_delay(Fu_ms, Fu_subKey, Fu_startMsg, Fu_doneMsg) {
+    return new Promise(function (Fu_resolve) {
+        if (Fu_subKey) Fu_setSub(Fu_subKey, "running", Fu_startMsg);
+        Fu_addLog(Fu_startMsg + "（耗时 " + Fu_ms + "ms）");
+        setTimeout(function () {
+            if (Fu_subKey) Fu_setSub(Fu_subKey, "done", Fu_doneMsg);
+            Fu_addLog("✓ " + Fu_doneMsg);
+            Fu_resolve();
+        }, Fu_ms);
+    });
+}`;
+
+        const Fu_srcMain = `async function Fu_makeDumplings() {
+    Fu_btnRun.disabled = true; Fu_resetUI();
+    Fu_addLog("=== 包饺子流程开始 ===");
+
+    // ① Promise.any：线上线下同时下单，谁先完成都算买到了
+    Fu_setStep("buy", "running");
+    const Fu_online  = Fu_delay(6000, "buy_online",  "线上美团 下单中...",  "线上美团 已送达");
+    const Fu_offline = Fu_delay(6000, "buy_offline", "线下菜市场 采购中...", "线下菜市场 已回家");
+    await Fu_promiseAny(Fu_online, Fu_offline);
+    Fu_setStep("buy", "done");
+
+    // ② 取原料
+    Fu_setStep("pick", "running");
+    await Fu_delay(1000, null, "② 取原料中...", "原料已放到厨房");
+    Fu_setStep("pick", "done");
+
+    // ③ Promise.all：和面 + 和馅，两个都好才能包
+    Fu_setStep("prep", "running");
+    const Fu_dough   = Fu_delay(4000, "dough",   "和面中...", "面团揉好了");
+    const Fu_filling = Fu_delay(5000, "filling", "和馅中...", "馅拌好了");
+    await Promise.all([Fu_dough, Fu_filling]);
+    Fu_setStep("prep", "done");
+
+    // ④ 包饺子 → ⑤ 煮饺子 → ⑥ 吃饺子：纯 await 串行
+    Fu_setStep("wrap", "running");
+    await Fu_delay(5000, null, "④ 包饺子中...", "一盘盘饺子码好了");
+    Fu_setStep("wrap", "done");
+
+    Fu_setStep("boil", "running");
+    await Fu_delay(3000, null, "⑤ 煮饺子中...", "饺子浮起来了");
+    Fu_setStep("boil", "done");
+
+    Fu_setStep("eat", "running");
+    await Fu_delay(2000, null, "⑥ 吃饺子中...", "吃撑啦 🥟");
+    Fu_setStep("eat", "done");
+
+    Fu_addLog("=== 全部完成！傅若涵吃到了热腾腾的饺子 ===");
+    Fu_btnRun.disabled = false;
+}`;
+
+        const Fu_srcAny = `// Promise.any polyfill
+// Promise.any：只要有一个 Promise 先 resolve，整体就 resolve
+// 与 Promise.all（全部 resolve 才 resolve）对照理解
+function Fu_promiseAny() {
+    const Fu_inputs = Array.from(arguments);
+    // 现代浏览器内置 Promise.any，则直接用
+    if (typeof Promise.any === "function") return Promise.any(Fu_inputs);
+    // 简易 polyfill：取第一个 resolve
+    return new Promise(function (Fu_resolve) {
+        Fu_inputs.forEach(function (Fu_p) {
+            Promise.resolve(Fu_p).then(Fu_resolve);
+        });
+    });
+}`;
+
+        document.querySelector("#Fu_block_delay pre").innerHTML = Fu_highlight(Fu_srcDelay);
+        document.querySelector("#Fu_block_main pre").innerHTML  = Fu_highlight(Fu_srcMain);
+        document.querySelector("#Fu_block_any pre").innerHTML   = Fu_highlight(Fu_srcAny);
+
+        document.getElementById("Fu_codeTabs").addEventListener("click", function (Fu_e) {
+            const Fu_t = Fu_e.target.closest(".Fu_codeTab");
+            if (!Fu_t) return;
+            const Fu_tab = Fu_t.getAttribute("data-tab");
+            document.querySelectorAll(".Fu_codeTab").forEach(function (Fu_x) {
+                Fu_x.classList.toggle("Fu_on", Fu_x.getAttribute("data-tab") === Fu_tab);
+            });
+            document.querySelectorAll(".Fu_codeBlock").forEach(function (Fu_x) {
+                Fu_x.classList.toggle("Fu_on", Fu_x.id === "Fu_block_" + Fu_tab);
+            });
+        });
+
+        Fu_btnRun.addEventListener("click", Fu_makeDumplings);
+        Fu_btnReset.addEventListener("click", function () {
+            Fu_btnRun.disabled = false;
+            Fu_resetUI();
+            Fu_addLog("已重置");
+        });
+
+        Fu_addLog("傅若涵 17-6 Promise 演示页就绪，点「开始包饺子流程」运行");
+    </script>
+</body>
+</html>

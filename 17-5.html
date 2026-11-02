@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>17-5 JavaScript 定时器 · setTimeout 与 setInterval · 傅若涵</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+            background: #fafafa;
+            color: #1a1a1a;
+            padding: 72px 20px 60px;
+            line-height: 1.75;
+            -webkit-font-smoothing: antialiased;
+        }
+        .Fu_wrap { max-width: 960px; margin: 0 auto; }
+
+        .Fu_header { text-align: center; margin-bottom: 44px; animation: Fu_fadeUp 0.7s ease both; }
+        .Fu_badge { display: inline-block; padding: 5px 16px; border-radius: 2px; font-size: 12px; letter-spacing: 4px; color: #fff; background: #1a1a1a; margin-bottom: 24px; }
+        .Fu_header h1 { font-size: 30px; font-weight: 500; letter-spacing: 4px; color: #111; }
+        .Fu_header .Fu_sub { margin-top: 12px; font-size: 14px; color: #8a8a8a; letter-spacing: 2px; }
+        .Fu_line { width: 56px; height: 1px; margin: 26px auto 0; background: #1a1a1a; }
+
+        /* 对比卡片 */
+        .Fu_grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; animation: Fu_fadeUp 0.75s ease both; }
+        @media (max-width: 760px) { .Fu_grid { grid-template-columns: 1fr; } }
+
+        .Fu_card {
+            background: #fff; border: 1px solid #e8e8e8; border-radius: 4px;
+            padding: 26px 24px 22px;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        .Fu_card:hover { border-color: #1a1a1a; box-shadow: 0 10px 28px rgba(0,0,0,0.06); }
+        .Fu_card .Fu_no { font-size: 12px; font-weight: 600; letter-spacing: 2px; color: #b0b0b0; }
+        .Fu_card h2 { font-size: 19px; font-weight: 600; letter-spacing: 1px; margin: 8px 0 4px; color: #111; }
+        .Fu_card .Fu_tag {
+            display: inline-block; font-size: 11px; padding: 2px 10px; border-radius: 20px;
+            background: #f2f2f2; color: #555; border: 1px solid #e8e8e8; margin-bottom: 12px;
+        }
+        .Fu_card .Fu_tag.Fu_once { color: #0f8a3d; border-color: #c8e8d4; background: #f2faf5; }
+        .Fu_card .Fu_tag.Fu_loop { color: #cc0000; border-color: #f0c8c8; background: #fdf2f2; }
+
+        .Fu_code {
+            font-family: Consolas, "Courier New", monospace; font-size: 13px;
+            background: #1a1a1a; color: #f5f5f5; border-radius: 3px;
+            padding: 12px 14px; overflow-x: auto; white-space: pre; line-height: 1.65;
+        }
+
+        .Fu_stage {
+            margin-top: 14px; background: #f7f7f7; border: 1px solid #e0e0e0; border-radius: 3px;
+            padding: 16px 18px; min-height: 70px; text-align: center;
+        }
+        .Fu_stage .Fu_big {
+            font-family: Consolas, "Courier New", monospace; font-size: 34px; font-weight: 700;
+            color: #111; letter-spacing: 2px;
+        }
+        .Fu_stage .Fu_big.Fu_done { color: #0f8a3d; }
+        .Fu_stage .Fu_big.Fu_ring { color: #cc0000; }
+        .Fu_stage .Fu_subtext { font-size: 12px; color: #8a8a8a; margin-top: 4px; }
+
+        .Fu_btns { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+        .Fu_btn {
+            font-size: 12.5px; font-weight: 600; letter-spacing: 1px; padding: 6px 16px;
+            border-radius: 2px; cursor: pointer; border: 1px solid #1a1a1a;
+            transition: background 0.18s ease, color 0.18s ease;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+        .Fu_btnOn { background: #1a1a1a; color: #fff; }
+        .Fu_btnOn:hover:not(:disabled) { background: #333; }
+        .Fu_btnOff { background: #fff; color: #1a1a1a; }
+        .Fu_btnOff:hover { background: #1a1a1a; color: #fff; }
+        .Fu_btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .Fu_desc { margin-top: 12px; font-size: 13.5px; color: #8a8a8a; line-height: 1.7; }
+        .Fu_desc code { font-family: Consolas, "Courier New", monospace; font-size: 12.5px; color: #cc0000; background: #fff; border: 1px solid #e0e0e0; padding: 1px 5px; border-radius: 2px; }
+
+        /* 日志区 */
+        .Fu_logBox {
+            margin-top: 22px; background: #1a1a1a; border-radius: 4px; padding: 16px 18px;
+            animation: Fu_fadeUp 0.85s ease both;
+        }
+        .Fu_logBox h2 { font-size: 13px; font-weight: 600; letter-spacing: 3px; color: #8a8a8a; margin-bottom: 10px; }
+        .Fu_log {
+            font-family: Consolas, "Courier New", monospace; font-size: 12.5px;
+            color: #7ee787; max-height: 180px; overflow: auto; white-space: pre-wrap;
+        }
+
+        /* 对比表 */
+        .Fu_compare {
+            margin-top: 22px; background: #fff; border: 1px solid #e8e8e8; border-radius: 4px; padding: 22px 24px;
+            animation: Fu_fadeUp 0.9s ease both;
+        }
+        .Fu_compare h2 { font-size: 13px; font-weight: 600; letter-spacing: 3px; color: #8a8a8a; margin-bottom: 12px; }
+        .Fu_compare table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+        .Fu_compare th, .Fu_compare td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+        .Fu_compare th { width: 28%; color: #8a8a8a; font-weight: 500; font-size: 12.5px; letter-spacing: 1px; }
+        .Fu_compare td code { font-family: Consolas, "Courier New", monospace; font-size: 12.5px; color: #cc0000; background: #fafafa; border: 1px solid #eee; padding: 1px 6px; border-radius: 2px; }
+
+        .Fu_footer { text-align: center; margin-top: 52px; padding-top: 24px; border-top: 1px solid #e8e8e8; font-size: 12px; letter-spacing: 2px; color: #a8a8a8; }
+        @keyframes Fu_fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    </style>
+</head>
+<body>
+    <div class="Fu_wrap">
+        <header class="Fu_header">
+            <div class="Fu_badge">929 · 傅若涵</div>
+            <h1>JavaScript 定时器</h1>
+            <p class="Fu_sub">setTimeout 延迟执行 · setInterval 周期重复 · clearTimeout / clearInterval 清除</p>
+            <div class="Fu_line"></div>
+        </header>
+
+        <main class="Fu_grid">
+            <!-- setTimeout -->
+            <section class="Fu_card">
+                <div class="Fu_no">01</div>
+                <h2>setTimeout</h2>
+                <span class="Fu_tag Fu_once">单次延迟执行</span>
+                <div class="Fu_code">const Fu_t = setTimeout(() => {
+  console.log("3 秒后执行一次");
+}, 3000);
+// clearTimeout(Fu_t);  // 取消</div>
+                <div class="Fu_stage">
+                    <div class="Fu_big" id="Fu_countdown">3</div>
+                    <div class="Fu_subtext" id="Fu_countdownSub">点击按钮启动，延迟 3 秒执行一次</div>
+                </div>
+                <div class="Fu_btns">
+                    <button class="Fu_btn Fu_btnOn" id="Fu_btnTimeout">启动 3 秒延迟</button>
+                    <button class="Fu_btn Fu_btnOff" id="Fu_btnClearTimeout" disabled>clearTimeout</button>
+                </div>
+                <p class="Fu_desc"><code>setTimeout(fn, ms)</code> 等待 <code>ms</code> 毫秒后调用一次 <code>fn</code>，返回一个 timerId；期间调用 <code>clearTimeout(id)</code> 可以取消。</p>
+            </section>
+
+            <!-- setInterval -->
+            <section class="Fu_card">
+                <div class="Fu_no">02</div>
+                <h2>setInterval</h2>
+                <span class="Fu_tag Fu_loop">周期重复执行</span>
+                <div class="Fu_code">const Fu_t = setInterval(() => {
+  console.log("每秒执行一次");
+}, 1000);
+// clearInterval(Fu_t);  // 停止</div>
+                <div class="Fu_stage">
+                    <div class="Fu_big Fu_ring" id="Fu_stopwatch">00:00</div>
+                    <div class="Fu_subtext" id="Fu_stopwatchSub">点击按钮启动，每秒更新一次</div>
+                </div>
+                <div class="Fu_btns">
+                    <button class="Fu_btn Fu_btnOn" id="Fu_btnInterval">启动秒表</button>
+                    <button class="Fu_btn Fu_btnOff" id="Fu_btnClearInterval" disabled>clearInterval</button>
+                    <button class="Fu_btn Fu_btnOff" id="Fu_btnReset">清零</button>
+                </div>
+                <p class="Fu_desc"><code>setInterval(fn, ms)</code> 每隔 <code>ms</code> 毫秒反复调用 <code>fn</code>，直到手动 <code>clearInterval(id)</code>；长时间运行的定时器务必清除，否则内存泄漏。</p>
+            </section>
+        </main>
+
+        <section class="Fu_logBox">
+            <h2>控制台日志（日志面板）</h2>
+            <div class="Fu_log" id="Fu_log"></div>
+        </section>
+
+        <section class="Fu_compare">
+            <h2>两种定时器对比</h2>
+            <table>
+                <tr><th>名称</th><td><code>setTimeout</code></td><td><code>setInterval</code></td></tr>
+                <tr><th>作用</th><td>延迟一段时间后执行 <strong>一次</strong></td><td>每隔一段时间 <strong>反复</strong> 执行</td></tr>
+                <tr><th>签名</th><td><code>setTimeout(fn, delay, ...args)</code></td><td><code>setInterval(fn, delay, ...args)</code></td></tr>
+                <tr><th>清除</th><td><code>clearTimeout(id)</code></td><td><code>clearInterval(id)</code></td></tr>
+                <tr><th>返回值</th><td colspan="2">都返回一个 <code>number</code> 类型的 timerId，传给对应的 clear 函数即可取消</td></tr>
+                <tr><th>执行时机</th><td>到点立即执行一次</td><td>到达间隔就执行；注意它<strong>不等待</strong>上一次回调执行完就会排下一次</td></tr>
+                <tr><th>常见坑</th><td>忘记清除导致后台一直跑（虽然只执行一次）</td><td>忘记清除 = 内存泄漏；用它做倒计时/轮询时务必在卸载时 clear</td></tr>
+                <tr><th>替代写法</th><td colspan="2">想要"等上次执行完再等下一次"，用 <code>setTimeout</code> 递归调用自己</td></tr>
+            </table>
+        </section>
+
+        <footer class="Fu_footer">© 2026 傅若涵 · 学号 929 · 高级网页设计</footer>
+    </div>
+
+    <script>
+        // ===== 日志 =====
+        const Fu_log = document.getElementById("Fu_log");
+        let Fu_logLines = [];
+        function Fu_addLog(Fu_text) {
+            const Fu_now = new Date();
+            const Fu_pad = function (Fu_n) { return Fu_n < 10 ? "0" + Fu_n : Fu_n; };
+            const Fu_ts = Fu_pad(Fu_now.getHours()) + ":" + Fu_pad(Fu_now.getMinutes()) + ":" + Fu_pad(Fu_now.getSeconds());
+            Fu_logLines.unshift("[" + Fu_ts + "] " + Fu_text);
+            Fu_log.textContent = Fu_logLines.slice(0, 40).join("\n");
+            console.log("傅若涵 17-5:", Fu_text);
+        }
+
+        // ===== setTimeout：3 秒延迟 =====
+        let Fu_timerTimeout = null;
+        let Fu_timerCountdown = null;
+        const Fu_countdownEl = document.getElementById("Fu_countdown");
+        const Fu_countdownSub = document.getElementById("Fu_countdownSub");
+        const Fu_btnTimeout = document.getElementById("Fu_btnTimeout");
+        const Fu_btnClearTimeout = document.getElementById("Fu_btnClearTimeout");
+
+        Fu_btnTimeout.addEventListener("click", function () {
+            // 先清掉旧的
+            if (Fu_timerTimeout) { clearTimeout(Fu_timerTimeout); Fu_timerTimeout = null; }
+            if (Fu_timerCountdown) { clearInterval(Fu_timerCountdown); Fu_timerCountdown = null; }
+
+            let Fu_n = 3;
+            Fu_countdownEl.textContent = Fu_n;
+            Fu_countdownEl.className = "Fu_big";
+            Fu_countdownSub.textContent = "倒计时 " + Fu_n + " 秒…";
+            Fu_btnTimeout.disabled = true;
+            Fu_btnClearTimeout.disabled = false;
+            Fu_addLog("setTimeout 开始，3 秒后执行");
+
+            Fu_timerCountdown = setInterval(function () {
+                Fu_n--;
+                if (Fu_n > 0) {
+                    Fu_countdownEl.textContent = Fu_n;
+                    Fu_countdownSub.textContent = "倒计时 " + Fu_n + " 秒…";
+                } else {
+                    clearInterval(Fu_timerCountdown);
+                    Fu_timerCountdown = null;
+                }
+            }, 1000);
+
+            Fu_timerTimeout = setTimeout(function () {
+                Fu_countdownEl.textContent = "✓ DONE";
+                Fu_countdownEl.className = "Fu_big Fu_done";
+                Fu_countdownSub.textContent = "延迟 3 秒后，setTimeout 执行了一次";
+                Fu_addLog("setTimeout 触发：3 秒到点执行了一次回调");
+                Fu_timerTimeout = null;
+                Fu_btnTimeout.disabled = false;
+                Fu_btnClearTimeout.disabled = true;
+            }, 3000);
+        });
+
+        Fu_btnClearTimeout.addEventListener("click", function () {
+            if (Fu_timerTimeout) {
+                clearTimeout(Fu_timerTimeout);
+                Fu_timerTimeout = null;
+                Fu_addLog("clearTimeout：取消了 3 秒延迟");
+            }
+            if (Fu_timerCountdown) { clearInterval(Fu_timerCountdown); Fu_timerCountdown = null; }
+            Fu_countdownEl.textContent = "已取消";
+            Fu_countdownEl.className = "Fu_big";
+            Fu_countdownSub.textContent = "定时器已被 clearTimeout 清除，不会再执行";
+            Fu_btnTimeout.disabled = false;
+            Fu_btnClearTimeout.disabled = true;
+        });
+
+        // ===== setInterval：秒表 =====
+        let Fu_timerInterval = null;
+        let Fu_secs = 0;
+        const Fu_stopwatch = document.getElementById("Fu_stopwatch");
+        const Fu_stopwatchSub = document.getElementById("Fu_stopwatchSub");
+        const Fu_btnInterval = document.getElementById("Fu_btnInterval");
+        const Fu_btnClearInterval = document.getElementById("Fu_btnClearInterval");
+        const Fu_btnReset = document.getElementById("Fu_btnReset");
+
+        function Fu_fmt(Fu_s) {
+            const Fu_m = Math.floor(Fu_s / 60);
+            const Fu_r = Fu_s % 60;
+            const Fu_pad = function (Fu_n) { return Fu_n < 10 ? "0" + Fu_n : Fu_n; };
+            return Fu_pad(Fu_m) + ":" + Fu_pad(Fu_r);
+        }
+
+        Fu_btnInterval.addEventListener("click", function () {
+            if (Fu_timerInterval) return; // 已在跑
+            Fu_addLog("setInterval 开始，每秒 +1");
+            Fu_timerInterval = setInterval(function () {
+                Fu_secs++;
+                Fu_stopwatch.textContent = Fu_fmt(Fu_secs);
+            }, 1000);
+            Fu_btnInterval.disabled = true;
+            Fu_btnInterval.textContent = "运行中…";
+            Fu_btnClearInterval.disabled = false;
+            Fu_stopwatchSub.textContent = "每 1 秒自动 +1，点 clearInterval 停止";
+        });
+
+        Fu_btnClearInterval.addEventListener("click", function () {
+            if (!Fu_timerInterval) return;
+            clearInterval(Fu_timerInterval);
+            Fu_timerInterval = null;
+            Fu_addLog("clearInterval：停止秒表，当前累计 " + Fu_fmt(Fu_secs));
+            Fu_btnInterval.disabled = false;
+            Fu_btnInterval.textContent = "继续";
+            Fu_btnClearInterval.disabled = true;
+            Fu_stopwatchSub.textContent = "已停止；累计 " + Fu_fmt(Fu_secs);
+        });
+
+        Fu_btnReset.addEventListener("click", function () {
+            if (Fu_timerInterval) { clearInterval(Fu_timerInterval); Fu_timerInterval = null; }
+            Fu_secs = 0;
+            Fu_stopwatch.textContent = "00:00";
+            Fu_btnInterval.disabled = false;
+            Fu_btnInterval.textContent = "启动秒表";
+            Fu_btnClearInterval.disabled = true;
+            Fu_stopwatchSub.textContent = "已清零";
+            Fu_addLog("秒表清零");
+        });
+
+        Fu_addLog("页面加载完成，两个定时器已就绪");
+    </script>
+</body>
+</html>

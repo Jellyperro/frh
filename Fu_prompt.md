@@ -206,3 +206,33 @@
 **Prompt:**
 把上面的任务都提交到github和gitee
 ---
+
+## 2026-11-02-16-22
+**Model:** DeepSeek-V4.1-Flash
+**Prompt:**
+完成17-4.html，对远程数据接口进行测试，支持get，post等，显示返回的数据和错误提示信息，示例post接口：`https://jsonplaceholder.typicode.com/posts`
+---
+
+## 2026-11-02-16-29
+**Model:** DeepSeek-V4.1-Flash
+**Prompt:**
+完成17-5.html，展示JavaScript的两种定时器
+---
+
+## 2026-11-02-16-35
+**Model:** DeepSeek-V4.1-Flash
+**Prompt:**
+完成17-6.html，使用promise和async完成异步操作的演示包饺子的流程。先买原料（线上线下同时购买，完成任何一个即可进行下一步），取原料，买完原料之后同时和面、和馅，两个活动都完成之后包饺子，包饺子煮饺子，然后吃饺子。使用setTimeout模拟每一个流程，如买原料6s。在页面上显示流程。
+---
+
+## 2026-11-02-16-41
+**Model:** DeepSeek-V4.1-Flash
+**Prompt:**
+帮我在17-6加入一块放着核心逻辑的部分可以吗
+---
+
+## 2026-11-02-16-44
+**Model:** DeepSeek-V4.1-Flash
+**Prompt:**
+好的，提交到 GitHub 和 Gitee
+---

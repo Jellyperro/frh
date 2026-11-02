@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>17-4 Fetch · API 测试工具 · 傅若涵</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+            background: #fafafa;
+            color: #1a1a1a;
+            padding: 72px 20px 60px;
+            line-height: 1.75;
+            -webkit-font-smoothing: antialiased;
+        }
+        .Fu_wrap { max-width: 1100px; margin: 0 auto; }
+
+        .Fu_header { text-align: center; margin-bottom: 44px; animation: Fu_fadeUp 0.7s ease both; }
+        .Fu_badge { display: inline-block; padding: 5px 16px; border-radius: 2px; font-size: 12px; letter-spacing: 4px; color: #fff; background: #1a1a1a; margin-bottom: 24px; }
+        .Fu_header h1 { font-size: 30px; font-weight: 500; letter-spacing: 4px; color: #111; }
+        .Fu_header .Fu_sub { margin-top: 12px; font-size: 14px; color: #8a8a8a; letter-spacing: 2px; }
+        .Fu_line { width: 56px; height: 1px; margin: 26px auto 0; background: #1a1a1a; }
+
+        /* 请求区 */
+        .Fu_panel {
+            background: #fff; border: 1px solid #e8e8e8; border-radius: 4px; padding: 24px 26px;
+            animation: Fu_fadeUp 0.75s ease both;
+        }
+        .Fu_panel h2 { font-size: 13px; font-weight: 600; letter-spacing: 3px; color: #8a8a8a; margin-bottom: 14px; }
+        .Fu_row { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+        .Fu_select, .Fu_input {
+            font-family: Consolas, "Courier New", monospace; font-size: 13px; color: #111;
+            border: 1px solid #e0e0e0; border-radius: 2px; padding: 8px 12px; background: #fff; outline: none;
+            transition: border-color 0.18s ease;
+        }
+        .Fu_select { cursor: pointer; min-width: 96px; }
+        .Fu_input { flex: 1; min-width: 260px; }
+        .Fu_select:focus, .Fu_input:focus, .Fu_textarea:focus { border-color: #1a1a1a; }
+        .Fu_textarea {
+            font-family: Consolas, "Courier New", monospace; font-size: 12.5px; color: #111;
+            width: 100%; min-height: 120px; border: 1px solid #e0e0e0; border-radius: 2px; padding: 10px 12px;
+            background: #fafafa; resize: vertical; outline: none; line-height: 1.65;
+        }
+        .Fu_label { font-size: 11px; color: #8a8a8a; letter-spacing: 1px; display: block; margin-bottom: 4px; }
+
+        .Fu_btns { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+        .Fu_btn {
+            font-size: 13px; font-weight: 600; letter-spacing: 1px; padding: 8px 22px;
+            border-radius: 2px; cursor: pointer; transition: background 0.18s ease, color 0.18s ease;
+            border: 1px solid #1a1a1a; font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+        .Fu_btnGo { background: #1a1a1a; color: #fff; }
+        .Fu_btnGo:hover:not(:disabled) { background: #333; }
+        .Fu_btnGo:disabled { background: #aaa; border-color: #aaa; cursor: not-allowed; }
+        .Fu_btnGhost { background: #fff; color: #1a1a1a; }
+        .Fu_btnGhost:hover { background: #1a1a1a; color: #fff; }
+
+        /* 快捷接口 */
+        .Fu_presets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+        .Fu_preset {
+            font-family: Consolas, "Courier New", monospace; font-size: 11.5px;
+            padding: 4px 10px; border-radius: 2px; background: #f2f2f2; border: 1px solid #e8e8e8;
+            color: #555; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease;
+        }
+        .Fu_preset:hover { background: #e8e8e8; border-color: #1a1a1a; color: #111; }
+        .Fu_preset b { color: #1a1a1a; margin-right: 4px; }
+
+        /* 响应区 */
+        .Fu_resp { margin-top: 22px; animation: Fu_fadeUp 0.85s ease both; }
+        .Fu_respHead {
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+            gap: 12px; margin-bottom: 12px; font-size: 13px;
+        }
+        .Fu_status { font-family: Consolas, "Courier New", monospace; font-weight: 600; }
+        .Fu_status.Fu_ok { color: #0f8a3d; }
+        .Fu_status.Fu_warn { color: #f5a623; }
+        .Fu_status.Fu_err { color: #cc0000; }
+        .Fu_time { color: #8a8a8a; font-family: Consolas, "Courier New", monospace; }
+
+        .Fu_tabs { display: flex; gap: 2px; margin-bottom: 0; }
+        .Fu_tab {
+            font-size: 12px; padding: 5px 14px; border-radius: 2px 2px 0 0; cursor: pointer;
+            background: #f2f2f2; color: #555; border: 1px solid #e8e8e8; border-bottom: none;
+            letter-spacing: 1px; transition: background 0.15s ease, color 0.15s ease;
+        }
+        .Fu_tab.Fu_on { background: #fff; color: #111; border-color: #e8e8e8; border-bottom-color: #fff; font-weight: 600; }
+
+        .Fu_body {
+            background: #1a1a1a; border-radius: 0 4px 4px 4px; padding: 18px 20px;
+            font-family: Consolas, "Courier New", monospace; font-size: 12.5px;
+            max-height: 460px; overflow: auto; line-height: 1.75;
+        }
+        .Fu_body pre { color: #7ee787; white-space: pre-wrap; word-break: break-all; }
+        .Fu_body table { width: 100%; border-collapse: collapse; color: #7ee787; }
+        .Fu_body th, .Fu_body td { text-align: left; padding: 5px 8px; border-bottom: 1px solid #2a2a2a; font-size: 12px; vertical-align: top; }
+        .Fu_body th { color: #9cdcfe; font-weight: 600; width: 30%; }
+
+        /* 错误态 */
+        .Fu_errBox {
+            background: #fdf2f2; border: 1px solid #f0c8c8; border-radius: 4px; padding: 18px 22px;
+            font-size: 13.5px; color: #cc0000; font-family: Consolas, "Courier New", monospace;
+            white-space: pre-wrap; word-break: break-all;
+        }
+
+        .Fu_footer { text-align: center; margin-top: 52px; padding-top: 24px; border-top: 1px solid #e8e8e8; font-size: 12px; letter-spacing: 2px; color: #a8a8a8; }
+        @keyframes Fu_fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    </style>
+</head>
+<body>
+    <div class="Fu_wrap">
+        <header class="Fu_header">
+            <div class="Fu_badge">929 · 傅若涵</div>
+            <h1>Fetch · API 测试工具</h1>
+            <p class="Fu_sub">支持 GET / POST / PUT / PATCH / DELETE · 响应体 / 响应头 / 错误提示</p>
+            <div class="Fu_line"></div>
+        </header>
+
+        <section class="Fu_panel">
+            <h2>请求配置</h2>
+            <div class="Fu_row">
+                <select class="Fu_select" id="Fu_method">
+                    <option>GET</option>
+                    <option selected>POST</option>
+                    <option>PUT</option>
+                    <option>PATCH</option>
+                    <option>DELETE</option>
+                </select>
+                <input class="Fu_input" id="Fu_url" value="https://jsonplaceholder.typicode.com/posts" placeholder="输入接口 URL">
+            </div>
+
+            <label class="Fu_label">请求体 body（仅 POST / PUT / PATCH 时发送；留空则忽略）</label>
+            <textarea class="Fu_textarea" id="Fu_body" spellcheck="false">{
+  "title": "傅若涵的第一篇文章",
+  "body": "Hello Fetch API！",
+  "userId": 1
+}</textarea>
+
+            <div class="Fu_btns">
+                <button class="Fu_btn Fu_btnGo" id="Fu_btnGo">发送请求</button>
+                <button class="Fu_btn Fu_btnGhost" id="Fu_btnClear">清空结果</button>
+                <button class="Fu_btn Fu_btnGhost" id="Fu_btnCopyUrl">复制 URL</button>
+            </div>
+
+            <h2 style="margin-top:18px;">快捷接口</h2>
+            <div class="Fu_presets" id="Fu_presets">
+                <div class="Fu_preset" data-method="GET" data-url="https://jsonplaceholder.typicode.com/posts/1" data-body=""><b>GET</b> posts/1 (单文章)</div>
+                <div class="Fu_preset" data-method="GET" data-url="https://jsonplaceholder.typicode.com/users" data-body=""><b>GET</b> users (列表)</div>
+                <div class="Fu_preset" data-method="POST" data-url="https://jsonplaceholder.typicode.com/posts" data-body='{"title":"傅若涵的第一篇文章","body":"Hello Fetch API！","userId":1}'><b>POST</b> posts (示例 body)</div>
+                <div class="Fu_preset" data-method="PUT" data-url="https://jsonplaceholder.typicode.com/posts/1" data-body='{"id":1,"title":"修改后标题","body":"傅若涵修改了文章"}'><b>PUT</b> posts/1</div>
+                <div class="Fu_preset" data-method="DELETE" data-url="https://jsonplaceholder.typicode.com/posts/1" data-body=""><b>DELETE</b> posts/1</div>
+                <div class="Fu_preset" data-method="GET" data-url="https://dummyjson.com/products/1" data-body=""><b>GET</b> dummyjson product</div>
+                <div class="Fu_preset" data-method="GET" data-url="https://httpstat.us/404" data-body=""><b>GET</b> httpstat 404 (错误测试)</div>
+                <div class="Fu_preset" data-method="GET" data-url="https://httpstat.us/500" data-body=""><b>GET</b> httpstat 500 (错误测试)</div>
+            </div>
+        </section>
+
+        <section class="Fu_resp" id="Fu_resp" style="display:none;">
+            <div class="Fu_respHead">
+                <div>
+                    <span class="Fu_status" id="Fu_status">-</span>
+                    <span class="Fu_time" id="Fu_time" style="margin-left:10px;"></span>
+                </div>
+                <div>
+                    <span class="Fu_tab Fu_on" data-tab="body">响应体</span>
+                    <span class="Fu_tab" data-tab="headers">响应头</span>
+                    <span class="Fu_tab" data-tab="req">请求明细</span>
+                </div>
+            </div>
+            <div class="Fu_body" id="Fu_bodyBox"></div>
+        </section>
+
+        <footer class="Fu_footer">© 2026 傅若涵 · 学号 929 · 高级网页设计</footer>
+    </div>
+
+    <script>
+        const Fu_method = document.getElementById("Fu_method");
+        const Fu_url = document.getElementById("Fu_url");
+        const Fu_body = document.getElementById("Fu_body");
+        const Fu_btnGo = document.getElementById("Fu_btnGo");
+        const Fu_btnClear = document.getElementById("Fu_btnClear");
+        const Fu_btnCopy = document.getElementById("Fu_btnCopyUrl");
+        const Fu_resp = document.getElementById("Fu_resp");
+        const Fu_status = document.getElementById("Fu_status");
+        const Fu_time = document.getElementById("Fu_time");
+        const Fu_bodyBox = document.getElementById("Fu_bodyBox");
+
+        let Fu_lastReq = null;
+
+        function Fu_setStatus(Fu_code) {
+            Fu_status.textContent = Fu_code;
+            Fu_status.classList.remove("Fu_ok", "Fu_warn", "Fu_err");
+            if (Fu_code >= 200 && Fu_code < 300) Fu_status.classList.add("Fu_ok");
+            else if (Fu_code >= 300 && Fu_code < 400) Fu_status.classList.add("Fu_warn");
+            else Fu_status.classList.add("Fu_err");
+        }
+
+        function Fu_formatJson(Fu_text) {
+            try {
+                return JSON.stringify(JSON.parse(Fu_text), null, 2);
+            } catch (e) {
+                return Fu_text;
+            }
+        }
+
+        function Fu_renderBodyTab() {
+            Fu_bodyBox.className = "Fu_body";
+            if (!Fu_lastReq) return;
+            if (Fu_lastReq.error) {
+                Fu_bodyBox.innerHTML = '<div class="Fu_errBox">' + Fu_lastReq.error + '</div>';
+                return;
+            }
+            Fu_bodyBox.innerHTML = '<pre>' + Fu_lastReq.bodyFormatted + '</pre>';
+        }
+
+        function Fu_renderHeadersTab() {
+            Fu_bodyBox.className = "Fu_body";
+            if (!Fu_lastReq || Fu_lastReq.error) return;
+            const Fu_hdrs = Fu_lastReq.headers;
+            let Fu_html = "<table>";
+            for (const Fu_k of Object.keys(Fu_hdrs)) {
+                Fu_html += "<tr><th>" + Fu_k + "</th><td>" + Fu_hdrs[Fu_k] + "</td></tr>";
+            }
+            Fu_html += "</table>";
+            Fu_bodyBox.innerHTML = Fu_html;
+        }
+
+        function Fu_renderReqTab() {
+            Fu_bodyBox.className = "Fu_body";
+            if (!Fu_lastReq) return;
+            const Fu_r = Fu_lastReq;
+            let Fu_html = "<table>"
+                + "<tr><th>method</th><td>" + Fu_r.method + "</td></tr>"
+                + "<tr><th>url</th><td>" + Fu_r.url + "</td></tr>"
+                + "<tr><th>time</th><td>" + Fu_r.time + " ms</td></tr>"
+                + "<tr><th>httpStatus</th><td>" + (Fu_r.httpStatus ?? "-") + "</td></tr>"
+                + "<tr><th>contentLength</th><td>" + (Fu_r.contentLength ?? "-") + " bytes</td></tr>";
+            if (Fu_r.reqBody !== undefined) Fu_html += "<tr><th>requestBody</th><td>" + Fu_r.reqBody + "</td></tr>";
+            if (Fu_r.error) Fu_html += "<tr><th>error</th><td>" + Fu_r.error + "</td></tr>";
+            Fu_html += "</table>";
+            Fu_bodyBox.innerHTML = Fu_html;
+        }
+
+        function Fu_switchTab(Fu_name) {
+            document.querySelectorAll(".Fu_tab").forEach(function (Fu_t) {
+                Fu_t.classList.toggle("Fu_on", Fu_t.getAttribute("data-tab") === Fu_name);
+            });
+            if (Fu_name === "body") Fu_renderBodyTab();
+            else if (Fu_name === "headers") Fu_renderHeadersTab();
+            else if (Fu_name === "req") Fu_renderReqTab();
+        }
+
+        async function Fu_send() {
+            const Fu_m = Fu_method.value;
+            const Fu_u = Fu_url.value.trim();
+            Fu_btnGo.disabled = true;
+            Fu_btnGo.textContent = "请求中…";
+            Fu_resp.style.display = "block";
+            Fu_setStatus("…");
+            Fu_time.textContent = "";
+            Fu_bodyBox.className = "Fu_body";
+            Fu_bodyBox.innerHTML = '<pre style="color:#8a8a8a;">⏳ 请求中…</pre>';
+
+            const Fu_start = performance.now();
+            Fu_lastReq = { method: Fu_m, url: Fu_u, error: null };
+
+            // 超时保护
+            const Fu_ctrl = new AbortController();
+            const Fu_timeout = setTimeout(function () { Fu_ctrl.abort(); }, 15000);
+
+            try {
+                if (!Fu_u) throw new Error("URL 不能为空");
+
+                const Fu_init = { method: Fu_m, signal: Fu_ctrl.signal };
+
+                const Fu_mSendBody = ["POST", "PUT", "PATCH"].indexOf(Fu_m.toUpperCase()) !== -1;
+                const Fu_rawBody = Fu_body.value.trim();
+                if (Fu_mSendBody && Fu_rawBody) {
+                    Fu_init.headers = { "Content-Type": "application/json;charset=UTF-8" };
+                    try {
+                        JSON.parse(Fu_rawBody); // 校验 JSON
+                        Fu_init.body = Fu_rawBody;
+                        Fu_lastReq.reqBody = Fu_rawBody;
+                    } catch (Fu_e) {
+                        clearTimeout(Fu_timeout);
+                        throw new Error("请求体不是合法 JSON：" + Fu_e.message);
+                    }
+                }
+
+                const Fu_resp = await fetch(Fu_u, Fu_init);
+                clearTimeout(Fu_timeout);
+
+                const Fu_text = await Fu_resp.text();
+                const Fu_end = Math.round(performance.now() - Fu_start);
+                Fu_lastReq.time = Fu_end;
+                Fu_lastReq.httpStatus = Fu_resp.status;
+
+                // 收集响应头
+                const Fu_hdrs = {};
+                Fu_resp.headers.forEach(function (Fu_v, Fu_k) { Fu_hdrs[Fu_k] = Fu_v; });
+                Fu_lastReq.headers = Fu_hdrs;
+                Fu_lastReq.contentLength = Fu_text.length;
+
+                Fu_setStatus("HTTP " + Fu_resp.status + " " + Fu_resp.statusText);
+                Fu_time.textContent = Fu_end + " ms · " + Fu_text.length + " bytes";
+
+                Fu_lastReq.bodyRaw = Fu_text;
+                Fu_lastReq.bodyFormatted = Fu_formatJson(Fu_text);
+
+                // 根据当前 tab 渲染
+                Fu_switchTab(document.querySelector(".Fu_tab.Fu_on").getAttribute("data-tab"));
+
+                // 非 2xx 给出提示但保留内容
+                if (!Fu_resp.ok) {
+                    Fu_lastReq.error = "HTTP 错误：状态码 " + Fu_resp.status + " " + Fu_resp.statusText + "（接口未返回 2xx 响应）";
+                }
+            } catch (Fu_err) {
+                clearTimeout(Fu_timeout);
+                const Fu_end = Math.round(performance.now() - Fu_start);
+                Fu_lastReq.time = Fu_end;
+
+                let Fu_msg;
+                if (Fu_err.name === "AbortError") Fu_msg = "请求超时：15 秒内未收到响应，已自动中断。可能原因：接口地址不通、服务器挂掉、网络不可达。";
+                else if (Fu_err.name === "TypeError" && Fu_err.message.indexOf("Failed to fetch") !== -1) Fu_msg = "网络失败：浏览器无法建立连接。常见原因：URL 拼写错误、DNS 解析失败、CORS 跨域被拒、目标服务器无响应。";
+                else Fu_msg = Fu_err.message;
+
+                Fu_lastReq.error = Fu_msg;
+                Fu_setStatus("错误");
+                Fu_time.textContent = Fu_end + " ms";
+                Fu_renderBodyTab();
+            } finally {
+                Fu_btnGo.disabled = false;
+                Fu_btnGo.textContent = "发送请求";
+            }
+        }
+
+        // Tab 切换
+        document.querySelectorAll(".Fu_tab").forEach(function (Fu_t) {
+            Fu_t.addEventListener("click", function () { Fu_switchTab(Fu_t.getAttribute("data-tab")); });
+        });
+
+        Fu_btnGo.addEventListener("click", Fu_send);
+        Fu_btnClear.addEventListener("click", function () {
+            Fu_resp.style.display = "none";
+            Fu_lastReq = null;
+        });
+        Fu_btnCopy.addEventListener("click", function () {
+            Fu_url.select();
+            document.execCommand("copy");
+            Fu_btnCopy.textContent = "已复制 ✓";
+            setTimeout(function () { Fu_btnCopy.textContent = "复制 URL"; }, 1200);
+        });
+
+        // 快捷接口
+        document.getElementById("Fu_presets").addEventListener("click", function (Fu_e) {
+            const Fu_t = Fu_e.target.closest(".Fu_preset");
+            if (!Fu_t) return;
+            Fu_method.value = Fu_t.getAttribute("data-method");
+            Fu_url.value = Fu_t.getAttribute("data-url");
+            Fu_body.value = Fu_t.getAttribute("data-body");
+        });
+
+        // Enter 快捷发送（Ctrl/Cmd + Enter）
+        Fu_body.addEventListener("keydown", function (Fu_e) {
+            if ((Fu_e.ctrlKey || Fu_e.metaKey) && Fu_e.key === "Enter") Fu_send();
+        });
+
+        // 默认 GET posts/1 看看
+        Fu_method.value = "GET";
+        Fu_url.value = "https://jsonplaceholder.typicode.com/posts/1";
+        Fu_body.value = "";
+        Fu_send();
+    </script>
+</body>
+</html>
