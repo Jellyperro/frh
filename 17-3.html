@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>17-3 Fetch · 商品列表 · 傅若涵</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+            background: #fafafa;
+            color: #1a1a1a;
+            padding: 72px 20px 60px;
+            line-height: 1.75;
+            -webkit-font-smoothing: antialiased;
+        }
+        .Fu_wrap { max-width: 1060px; margin: 0 auto; }
+
+        .Fu_header { text-align: center; margin-bottom: 44px; animation: Fu_fadeUp 0.7s ease both; }
+        .Fu_badge { display: inline-block; padding: 5px 16px; border-radius: 2px; font-size: 12px; letter-spacing: 4px; color: #fff; background: #1a1a1a; margin-bottom: 24px; }
+        .Fu_header h1 { font-size: 30px; font-weight: 500; letter-spacing: 4px; color: #111; }
+        .Fu_header .Fu_sub { margin-top: 12px; font-size: 14px; color: #8a8a8a; letter-spacing: 2px; }
+        .Fu_line { width: 56px; height: 1px; margin: 26px auto 0; background: #1a1a1a; }
+
+        /* 信息栏 */
+        .Fu_topbar {
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+            gap: 12px; margin-bottom: 22px; animation: Fu_fadeUp 0.75s ease both;
+        }
+        .Fu_count { font-size: 13px; color: #555; }
+        .Fu_count b { color: #111; }
+        .Fu_btn {
+            font-size: 13px; font-weight: 600; letter-spacing: 1px;
+            padding: 7px 20px; border-radius: 2px; cursor: pointer;
+            background: #1a1a1a; color: #fff; border: 1px solid #1a1a1a;
+            transition: background 0.18s ease;
+        }
+        .Fu_btn:hover { background: #333; }
+
+        /* 列表栅格 */
+        .Fu_grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px;
+            animation: Fu_fadeUp 0.8s ease both;
+        }
+        @media (max-width: 960px) { .Fu_grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 720px) { .Fu_grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 440px) { .Fu_grid { grid-template-columns: 1fr; } }
+
+        .Fu_card {
+            background: #fff; border: 1px solid #e8e8e8; border-radius: 4px;
+            overflow: hidden; transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+            cursor: pointer; display: block; text-decoration: none; color: inherit;
+        }
+        .Fu_card:hover { border-color: #1a1a1a; box-shadow: 0 10px 28px rgba(0,0,0,0.08); transform: translateY(-3px); }
+        .Fu_card .Fu_imgBox {
+            aspect-ratio: 1 / 1; background: #f5f5f5; display: flex; align-items: center; justify-content: center; overflow: hidden;
+        }
+        .Fu_card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .Fu_card .Fu_info { padding: 14px 14px 16px; }
+        .Fu_card .Fu_title { font-size: 14px; font-weight: 600; color: #111; line-height: 1.45; height: 40px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .Fu_card .Fu_cat { font-size: 11px; color: #8a8a8a; text-transform: uppercase; letter-spacing: 1px; margin-top: 6px; }
+        .Fu_card .Fu_row { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+        .Fu_card .Fu_price { font-size: 16px; font-weight: 700; color: #cc0000; }
+        .Fu_card .Fu_price del { font-size: 11px; color: #b0b0b0; margin-left: 4px; font-weight: 400; }
+        .Fu_card .Fu_rating { font-size: 12px; color: #f5a623; }
+        .Fu_card .Fu_stock { font-size: 11px; margin-top: 6px; }
+        .Fu_card .Fu_stock.Fu_low { color: #cc0000; }
+        .Fu_card .Fu_stock.Fu_ok { color: #0f8a3d; }
+
+        /* 骨架 */
+        .Fu_skeleton .Fu_imgBox { background: linear-gradient(90deg,#eee 25%,#f5f5f5 50%,#eee 75%); background-size: 200% 100%; animation: Fu_shimmer 1.4s infinite; }
+        .Fu_skeleton .Fu_title, .Fu_skeleton .Fu_cat, .Fu_skeleton .Fu_row { color: transparent; background: linear-gradient(90deg,#eee 25%,#f5f5f5 50%,#eee 75%); background-size: 200% 100%; animation: Fu_shimmer 1.4s infinite; border-radius: 2px; height: 14px; }
+        .Fu_skeleton .Fu_cat { height: 11px; width: 60%; }
+        @keyframes Fu_shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+        /* 错误/空 */
+        .Fu_msg { grid-column: 1 / -1; text-align: center; padding: 50px 20px; font-size: 14px; color: #8a8a8a; background: #fff; border: 1px solid #e8e8e8; border-radius: 4px; }
+        .Fu_msg.Fu_err { color: #cc0000; background: #fdf2f2; border-color: #f0c8c8; }
+
+        .Fu_footer { text-align: center; margin-top: 52px; padding-top: 24px; border-top: 1px solid #e8e8e8; font-size: 12px; letter-spacing: 2px; color: #a8a8a8; }
+        @keyframes Fu_fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    </style>
+</head>
+<body>
+    <div class="Fu_wrap">
+        <header class="Fu_header">
+            <div class="Fu_badge">929 · 傅若涵</div>
+            <h1>商品列表</h1>
+            <p class="Fu_sub">fetch 调用 dummyjson API · 点击卡片跳转详情</p>
+            <div class="Fu_line"></div>
+        </header>
+
+        <div class="Fu_topbar">
+            <div class="Fu_count" id="Fu_count">加载中…</div>
+            <button class="Fu_btn" id="Fu_btnReload">重新加载</button>
+        </div>
+
+        <main class="Fu_grid" id="Fu_grid"></main>
+
+        <footer class="Fu_footer">© 2026 傅若涵 · 学号 929 · 高级网页设计</footer>
+    </div>
+
+    <script>
+        const Fu_listUrl = "https://dummyjson.com/products?limit=8";
+        const Fu_grid = document.getElementById("Fu_grid");
+        const Fu_count = document.getElementById("Fu_count");
+
+        function Fu_skeleton() {
+            let Fu_html = "";
+            for (let Fu_i = 0; Fu_i < 8; Fu_i++) {
+                Fu_html += '<div class="Fu_card Fu_skeleton"><div class="Fu_imgBox"></div><div class="Fu_info"><div class="Fu_title">loading…</div><div class="Fu_cat">loading…</div><div class="Fu_row"><span class="Fu_price">loading</span><span class="Fu_rating">loading</span></div></div></div>';
+            }
+            Fu_grid.innerHTML = Fu_html;
+        }
+
+        function Fu_renderError(Fu_msg) {
+            Fu_grid.innerHTML = '<div class="Fu_msg Fu_err">❌ ' + Fu_msg + '</div>';
+            Fu_count.textContent = "加载失败";
+        }
+
+        function Fu_renderEmpty() {
+            Fu_grid.innerHTML = '<div class="Fu_msg">暂无商品数据</div>';
+            Fu_count.textContent = "共 0 件商品";
+        }
+
+        function Fu_priceAfterDiscount(Fu_price, Fu_discount) {
+            if (!Fu_discount) return Fu_price.toFixed(2);
+            return (Fu_price * (1 - Fu_discount / 100)).toFixed(2);
+        }
+
+        function Fu_renderList(Fu_list) {
+            if (!Array.isArray(Fu_list) || Fu_list.length === 0) { Fu_renderEmpty(); return; }
+            let Fu_html = "";
+            Fu_list.forEach(function (Fu_p) {
+                const Fu_thumb = Fu_p.thumbnail || (Fu_p.images && Fu_p.images[0]) || "";
+                const Fu_stockClass = Fu_p.stock <= 10 ? "Fu_low" : "Fu_ok";
+                const Fu_stockText = Fu_p.stock <= 10 ? "低库存" : "有货";
+                const Fu_finalPrice = Fu_priceAfterDiscount(Fu_p.price, Fu_p.discountPercentage);
+                const Fu_origPrice = Fu_p.discountPercentage ? '<del>$' + Fu_p.price.toFixed(2) + '</del>' : '';
+
+                Fu_html += '<a class="Fu_card" href="17-3detail.html?id=' + Fu_p.id + '">'
+                         + '<div class="Fu_imgBox"><img src="' + Fu_thumb + '" alt="' + Fu_p.title + '" onerror="this.style.opacity=0.3"></div>'
+                         + '<div class="Fu_info">'
+                         + '<div class="Fu_title">' + Fu_p.title + '</div>'
+                         + '<div class="Fu_cat">' + (Fu_p.category || "-") + (Fu_p.brand ? " · " + Fu_p.brand : "") + '</div>'
+                         + '<div class="Fu_row"><span class="Fu_price">$' + Fu_finalPrice + Fu_origPrice + '</span><span class="Fu_rating">★ ' + (Fu_p.rating || 0) + '</span></div>'
+                         + '<div class="Fu_stock ' + Fu_stockClass + '">库存 ' + Fu_p.stock + ' · ' + Fu_stockText + '</div>'
+                         + '</div></a>';
+            });
+            Fu_grid.innerHTML = Fu_html;
+            Fu_count.innerHTML = '共 <b>' + Fu_list.length + '</b> 件商品';
+        }
+
+        async function Fu_loadList() {
+            Fu_count.textContent = "请求中…";
+            Fu_skeleton();
+            try {
+                const Fu_resp = await fetch(Fu_listUrl);
+                if (!Fu_resp.ok) throw new Error("HTTP " + Fu_resp.status);
+                const Fu_data = await Fu_resp.json();
+                Fu_renderList(Fu_data.products);
+                console.log("傅若涵 17-3 列表加载成功：", Fu_data.products.length + " 件");
+            } catch (Fu_err) {
+                Fu_renderError(Fu_err.message);
+                console.error("傅若涵 17-3 列表失败：", Fu_err);
+            }
+        }
+
+        document.getElementById("Fu_btnReload").addEventListener("click", Fu_loadList);
+        Fu_loadList();
+    </script>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>17-3 Fetch · 商品详情 · 傅若涵</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+            background: #fafafa;
+            color: #1a1a1a;
+            padding: 72px 20px 60px;
+            line-height: 1.75;
+            -webkit-font-smoothing: antialiased;
+        }
+        .Fu_wrap { max-width: 1060px; margin: 0 auto; }
+
+        .Fu_header { text-align: center; margin-bottom: 44px; animation: Fu_fadeUp 0.7s ease both; }
+        .Fu_badge { display: inline-block; padding: 5px 16px; border-radius: 2px; font-size: 12px; letter-spacing: 4px; color: #fff; background: #1a1a1a; margin-bottom: 24px; }
+        .Fu_header h1 { font-size: 30px; font-weight: 500; letter-spacing: 4px; color: #111; }
+        .Fu_header .Fu_sub { margin-top: 12px; font-size: 14px; color: #8a8a8a; letter-spacing: 2px; }
+        .Fu_line { width: 56px; height: 1px; margin: 26px auto 0; background: #1a1a1a; }
+
+        .Fu_back {
+            display: inline-block; margin-bottom: 18px; font-size: 13px; color: #555;
+            text-decoration: none; border-bottom: 1px solid #555; transition: color 0.18s ease;
+        }
+        .Fu_back:hover { color: #111; border-color: #111; }
+
+        /* 详情栅格 */
+        .Fu_main {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 28px;
+            animation: Fu_fadeUp 0.75s ease both;
+        }
+        @media (max-width: 760px) { .Fu_main { grid-template-columns: 1fr; } }
+
+        /* 左侧图片 */
+        .Fu_gallery { background: #fff; border: 1px solid #e8e8e8; border-radius: 4px; padding: 16px; }
+        .Fu_mainImg {
+            aspect-ratio: 1 / 1; background: #f5f5f5; border-radius: 2px; overflow: hidden;
+            display: flex; align-items: center; justify-content: center; margin-bottom: 12px;
+        }
+        .Fu_mainImg img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .Fu_thumbs { display: flex; gap: 8px; overflow-x: auto; }
+        .Fu_thumbs img {
+            width: 56px; height: 56px; object-fit: cover; border: 1px solid #e0e0e0; border-radius: 2px;
+            cursor: pointer; flex-shrink: 0; transition: border-color 0.18s ease;
+        }
+        .Fu_thumbs img.Fu_active { border-color: #1a1a1a; }
+
+        /* 右侧信息 */
+        .Fu_info { background: #fff; border: 1px solid #e8e8e8; border-radius: 4px; padding: 26px; }
+        .Fu_catTag {
+            display: inline-block; padding: 2px 10px; border-radius: 2px; font-size: 11px;
+            letter-spacing: 1px; color: #fff; background: #1a1a1a; margin-bottom: 10px;
+        }
+        .Fu_title { font-size: 22px; font-weight: 600; color: #111; line-height: 1.35; }
+        .Fu_desc { font-size: 14px; color: #555; margin-top: 14px; }
+        .Fu_priceBox { display: flex; align-items: baseline; gap: 10px; margin-top: 18px; padding-top: 18px; border-top: 1px dashed #e0e0e0; }
+        .Fu_priceBox .Fu_final { font-size: 28px; font-weight: 700; color: #cc0000; }
+        .Fu_priceBox .Fu_orig { font-size: 14px; color: #b0b0b0; text-decoration: line-through; }
+        .Fu_priceBox .Fu_disc {
+            font-size: 12px; padding: 2px 8px; border-radius: 2px; color: #fff; background: #cc0000; font-weight: 600;
+        }
+        .Fu_ratingRow { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: 13px; color: #555; }
+        .Fu_ratingRow .Fu_stars { color: #f5a623; }
+
+        .Fu_table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+        .Fu_table th, .Fu_table td { padding: 8px 0; text-align: left; border-bottom: 1px solid #f0f0f0; }
+        .Fu_table th { width: 110px; color: #8a8a8a; font-weight: 500; }
+        .Fu_table td { color: #3a3a3a; font-family: Consolas, "Courier New", monospace; font-size: 12.5px; word-break: break-all; }
+
+        /* Reviews */
+        .Fu_reviews { margin-top: 28px; background: #fff; border: 1px solid #e8e8e8; border-radius: 4px; padding: 22px 26px; animation: Fu_fadeUp 0.85s ease both; }
+        .Fu_reviews h2 { font-size: 15px; font-weight: 600; letter-spacing: 1px; color: #111; margin-bottom: 14px; }
+        .Fu_rev { padding: 12px 0; border-bottom: 1px dashed #eee; }
+        .Fu_rev:last-child { border-bottom: none; }
+        .Fu_rev .Fu_revTop { display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; color: #8a8a8a; }
+        .Fu_rev .Fu_revName { font-weight: 600; color: #111; font-size: 14px; }
+        .Fu_rev .Fu_revStars { color: #f5a623; font-size: 12px; }
+        .Fu_rev .Fu_revDate { font-size: 12px; }
+        .Fu_rev .Fu_revText { font-size: 13.5px; color: #3a3a3a; margin-top: 6px; }
+
+        /* Tags */
+        .Fu_tags { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 6px; }
+        .Fu_tags span { font-size: 11.5px; padding: 2px 10px; border-radius: 20px; background: #f2f2f2; color: #555; border: 1px solid #e8e8e8; }
+
+        /* 骨架 / 错误 */
+        .Fu_skeleton .Fu_mainImg, .Fu_skeleton .Fu_title, .Fu_skeleton .Fu_desc, .Fu_skeleton .Fu_priceBox {
+            background: linear-gradient(90deg,#eee 25%,#f5f5f5 50%,#eee 75%); background-size: 200% 100%; animation: Fu_shimmer 1.4s infinite; color: transparent;
+        }
+        .Fu_skeleton .Fu_title { height: 26px; }
+        .Fu_skeleton .Fu_desc { height: 40px; }
+        .Fu_skeleton .Fu_priceBox { height: 36px; border: none; }
+        @keyframes Fu_shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+        .Fu_msg { text-align: center; padding: 60px 20px; font-size: 14px; color: #8a8a8a; background: #fff; border: 1px solid #e8e8e8; border-radius: 4px; }
+        .Fu_msg.Fu_err { color: #cc0000; background: #fdf2f2; border-color: #f0c8c8; }
+
+        .Fu_footer { text-align: center; margin-top: 52px; padding-top: 24px; border-top: 1px solid #e8e8e8; font-size: 12px; letter-spacing: 2px; color: #a8a8a8; }
+        @keyframes Fu_fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    </style>
+</head>
+<body>
+    <div class="Fu_wrap">
+        <header class="Fu_header">
+            <div class="Fu_badge">929 · 傅若涵</div>
+            <h1>商品详情</h1>
+            <p class="Fu_sub">fetch 调用 dummyjson API · 从 URL 参数 id 读取商品</p>
+            <div class="Fu_line"></div>
+        </header>
+
+        <a class="Fu_back" href="17-3.html">← 返回商品列表</a>
+
+        <div id="Fu_root">
+            <div class="Fu_skeleton Fu_main">
+                <div class="Fu_gallery"><div class="Fu_mainImg"></div></div>
+                <div class="Fu_info"><div class="Fu_title">loading…</div><div class="Fu_desc">loading…</div><div class="Fu_priceBox"></div></div>
+            </div>
+        </div>
+
+        <footer class="Fu_footer">© 2026 傅若涵 · 学号 929 · 高级网页设计</footer>
+    </div>
+
+    <script>
+        const Fu_root = document.getElementById("Fu_root");
+
+        function Fu_priceAfterDiscount(Fu_price, Fu_discount) {
+            if (!Fu_discount) return Fu_price.toFixed(2);
+            return (Fu_price * (1 - Fu_discount / 100)).toFixed(2);
+        }
+
+        function Fu_formatDate(Fu_iso) {
+            if (!Fu_iso) return "-";
+            const Fu_d = new Date(Fu_iso);
+            const Fu_pad = function (Fu_n) { return Fu_n < 10 ? "0" + Fu_n : Fu_n; };
+            return Fu_d.getFullYear() + "-" + Fu_pad(Fu_d.getMonth() + 1) + "-" + Fu_pad(Fu_d.getDate());
+        }
+
+        function Fu_renderStars(Fu_rating) {
+            const Fu_full = Math.round(Fu_rating);
+            let Fu_s = "";
+            for (let Fu_i = 0; Fu_i < 5; Fu_i++) Fu_s += Fu_i < Fu_full ? "★" : "☆";
+            return Fu_s;
+        }
+
+        function Fu_renderDetail(Fu_p) {
+            const Fu_imgs = Fu_p.images && Fu_p.images.length ? Fu_p.images : [Fu_p.thumbnail];
+            const Fu_final = Fu_priceAfterDiscount(Fu_p.price, Fu_p.discountPercentage);
+            const Fu_origText = Fu_p.discountPercentage ? '<span class="Fu_orig">$' + Fu_p.price.toFixed(2) + '</span>' : '';
+            const Fu_discText = Fu_p.discountPercentage ? '<span class="Fu_disc">-' + Fu_p.discountPercentage + '%</span>' : '';
+
+            let Fu_main =
+                '<div class="Fu_main">'
+                + '<div class="Fu_gallery">'
+                +   '<div class="Fu_mainImg"><img id="Fu_mainImg" src="' + Fu_imgs[0] + '" alt="' + Fu_p.title + '" onerror="this.style.opacity=0.3"></div>'
+                +   '<div class="Fu_thumbs">' + Fu_imgs.map(function (Fu_src, Fu_i) {
+                       return '<img src="' + Fu_src + '" class="' + (Fu_i === 0 ? "Fu_active" : "") + '" data-full="' + Fu_src + '" alt="thumb ' + Fu_i + '">';
+                   }).join("") + '</div>'
+                + '</div>'
+                + '<div class="Fu_info">'
+                +   '<span class="Fu_catTag">' + (Fu_p.category || "-") + '</span>'
+                +   '<div class="Fu_title">' + Fu_p.title + '</div>'
+                +   '<div class="Fu_desc">' + (Fu_p.description || "") + '</div>'
+                +   '<div class="Fu_priceBox">'
+                +     '<span class="Fu_final">$' + Fu_final + '</span>' + Fu_origText + Fu_discText
+                +   '</div>'
+                +   '<div class="Fu_ratingRow"><span class="Fu_stars">' + Fu_renderStars(Fu_p.rating || 0) + '</span><span>' + (Fu_p.rating || 0) + ' / 5</span></div>'
+                +   '<table class="Fu_table">'
+                +     '<tr><th>品牌 Brand</th><td>' + (Fu_p.brand || "-") + '</td></tr>'
+                +     '<tr><th>SKU</th><td>' + (Fu_p.sku || "-") + '</td></tr>'
+                +     '<tr><th>库存 Stock</th><td>' + (Fu_p.stock ?? "-") + '</td></tr>'
+                +     '<tr><th>状态</th><td>' + (Fu_p.availabilityStatus || "-") + '</td></tr>'
+                +     '<tr><th>重量</th><td>' + (Fu_p.weight ?? "-") + ' kg</td></tr>'
+                +     '<tr><th>保修</th><td>' + (Fu_p.warrantyInformation || "-") + '</td></tr>'
+                +     '<tr><th>配送</th><td>' + (Fu_p.shippingInformation || "-") + '</td></tr>'
+                +     '<tr><th>退货政策</th><td>' + (Fu_p.returnPolicy || "-") + '</td></tr>'
+                +     '<tr><th>MOQ</th><td>' + (Fu_p.minimumOrderQuantity ?? "-") + '</td></tr>'
+                +     '<tr><th>条形码</th><td>' + (Fu_p.meta && Fu_p.meta.barcode ? Fu_p.meta.barcode : "-") + '</td></tr>'
+                +   '</table>'
+                +   (Fu_p.tags && Fu_p.tags.length ? '<div class="Fu_tags">' + Fu_p.tags.map(function (Fu_t) { return '<span>' + Fu_t + '</span>'; }).join("") + '</div>' : '')
+                + '</div>'
+                + '</div>';
+
+            let Fu_rev = "";
+            if (Fu_p.reviews && Fu_p.reviews.length) {
+                Fu_rev += '<section class="Fu_reviews"><h2>用户评价（' + Fu_p.reviews.length + '）</h2>';
+                Fu_p.reviews.forEach(function (Fu_r) {
+                    Fu_rev += '<div class="Fu_rev">'
+                            +   '<div class="Fu_revTop"><span><span class="Fu_revName">' + Fu_r.reviewerName + '</span> <span class="Fu_revStars">' + Fu_renderStars(Fu_r.rating) + '</span></span>'
+                            +   '<span class="Fu_revDate">' + Fu_formatDate(Fu_r.date) + '</span></div>'
+                            +   '<div class="Fu_revText">' + Fu_r.comment + '</div>'
+                            + '</div>';
+                });
+                Fu_rev += '</section>';
+            }
+
+            Fu_root.innerHTML = Fu_main + Fu_rev;
+
+            // 缩略图点击切换
+            const Fu_thumbs = document.querySelectorAll(".Fu_thumbs img");
+            Fu_thumbs.forEach(function (Fu_t) {
+                Fu_t.addEventListener("click", function () {
+                    document.getElementById("Fu_mainImg").src = Fu_t.getAttribute("data-full");
+                    Fu_thumbs.forEach(function (Fu_x) { Fu_x.classList.remove("Fu_active"); });
+                    Fu_t.classList.add("Fu_active");
+                });
+            });
+        }
+
+        function Fu_renderError(Fu_msg) {
+            Fu_root.innerHTML = '<div class="Fu_msg Fu_err">❌ ' + Fu_msg + '</div>';
+        }
+
+        async function Fu_loadDetail(Fu_id) {
+            Fu_root.innerHTML = '<div class="Fu_skeleton Fu_main"><div class="Fu_gallery"><div class="Fu_mainImg"></div></div><div class="Fu_info"><div class="Fu_title">loading…</div><div class="Fu_desc">loading…</div><div class="Fu_priceBox"></div></div></div>';
+            try {
+                const Fu_resp = await fetch("https://dummyjson.com/products/" + Fu_id);
+                if (!Fu_resp.ok) throw new Error("HTTP " + Fu_resp.status);
+                const Fu_p = await Fu_resp.json();
+                if (!Fu_p || !Fu_p.id) throw new Error("未找到 id=" + Fu_id + " 的商品");
+                Fu_renderDetail(Fu_p);
+                document.title = "17-3 · " + Fu_p.title + " · 傅若涵";
+                console.log("傅若涵 17-3 详情加载成功：", Fu_p.id, Fu_p.title);
+            } catch (Fu_err) {
+                Fu_renderError(Fu_err.message);
+                console.error("傅若涵 17-3 详情失败：", Fu_err);
+            }
+        }
+
+        // 从 URL 读取 id 参数
+        const Fu_params = new URLSearchParams(window.location.search);
+        const Fu_id = Fu_params.get("id");
+        if (!Fu_id) {
+            Fu_renderError("缺少参数 id，请从商品列表点击进入");
+        } else {
+            Fu_loadDetail(Fu_id);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>17-2 Fetch · 获取随机狗狗图片 · 傅若涵</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+            min-height: 100vh;
+            background: #fafafa;
+            color: #1a1a1a;
+            padding: 72px 20px 60px;
+            line-height: 1.75;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .Fu_wrap {
+            max-width: 940px;
+            margin: 0 auto;
+        }
+
+        .Fu_header {
+            text-align: center;
+            margin-bottom: 44px;
+            animation: Fu_fadeUp 0.7s ease both;
+        }
+
+        .Fu_badge {
+            display: inline-block;
+            padding: 5px 16px;
+            border-radius: 2px;
+            font-size: 12px;
+            letter-spacing: 4px;
+            color: #fff;
+            background: #1a1a1a;
+            margin-bottom: 24px;
+        }
+
+        .Fu_header h1 {
+            font-size: 30px;
+            font-weight: 500;
+            letter-spacing: 4px;
+            color: #111;
+        }
+
+        .Fu_header .Fu_sub {
+            margin-top: 12px;
+            font-size: 14px;
+            color: #8a8a8a;
+            letter-spacing: 2px;
+        }
+
+        .Fu_line {
+            width: 56px;
+            height: 1px;
+            margin: 26px auto 0;
+            background: #1a1a1a;
+        }
+
+        /* ===== 接口信息卡片 ===== */
+        .Fu_info {
+            background: #f2f2f2;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            padding: 22px 26px;
+            margin-bottom: 22px;
+            animation: Fu_fadeUp 0.75s ease both;
+        }
+
+        .Fu_info h2 {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            color: #8a8a8a;
+            margin-bottom: 10px;
+        }
+
+        .Fu_info p {
+            font-size: 14px;
+            color: #3a3a3a;
+            padding-left: 16px;
+            border-left: 2px solid #1a1a1a;
+        }
+
+        .Fu_info code {
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 12.5px;
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 2px;
+            padding: 1px 6px;
+            color: #cc0000;
+        }
+
+        /* ===== 操作区 ===== */
+        .Fu_action {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 28px;
+            animation: Fu_fadeUp 0.8s ease both;
+        }
+
+        .Fu_btn {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            padding: 10px 28px;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+        }
+
+        .Fu_btnPrimary {
+            background: #1a1a1a;
+            color: #fff;
+            border: 1px solid #1a1a1a;
+        }
+
+        .Fu_btnPrimary:hover {
+            background: #333;
+        }
+
+        .Fu_btnGhost {
+            background: #fff;
+            color: #1a1a1a;
+            border: 1px solid #1a1a1a;
+        }
+
+        .Fu_btnGhost:hover {
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        /* ===== 状态提示 ===== */
+        .Fu_status {
+            text-align: center;
+            font-size: 13px;
+            color: #8a8a8a;
+            margin-bottom: 18px;
+            min-height: 20px;
+        }
+
+        .Fu_status.Fu_ok { color: #0f8a3d; }
+        .Fu_status.Fu_err { color: #cc0000; }
+
+        /* ===== 加载占位 ===== */
+        .Fu_grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            animation: Fu_fadeUp 0.85s ease both;
+        }
+
+        .Fu_cell {
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            overflow: hidden;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+            min-height: 280px;
+        }
+
+        .Fu_cell:hover {
+            border-color: #1a1a1a;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+            transform: translateY(-3px);
+        }
+
+        .Fu_cell img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            display: block;
+            background: #f5f5f5;
+        }
+
+        .Fu_cell .Fu_meta {
+            padding: 12px 14px;
+            font-size: 12.5px;
+            color: #8a8a8a;
+            word-break: break-all;
+            line-height: 1.55;
+        }
+
+        .Fu_cell .Fu_meta code {
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 11.5px;
+            color: #1a1a1a;
+        }
+
+        /* 加载骨架 */
+        .Fu_skeleton img {
+            background: linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%);
+            background-size: 200% 100%;
+            animation: Fu_shimmer 1.4s infinite;
+            opacity: 0;
+        }
+
+        .Fu_skeleton .Fu_meta {
+            color: transparent;
+            background: linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%);
+            background-size: 200% 100%;
+            animation: Fu_shimmer 1.4s infinite;
+            border-radius: 2px;
+        }
+
+        @keyframes Fu_shimmer {
+            0%   { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* 错误占位 */
+        .Fu_errbox {
+            text-align: center;
+            padding: 40px 20px;
+            color: #cc0000;
+            font-size: 13.5px;
+            background: #fdf2f2;
+            border: 1px solid #f0c8c8;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        /* 响应式 */
+        @media (max-width: 720px) {
+            .Fu_grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== 响应体预览 ===== */
+        .Fu_response {
+            margin-top: 28px;
+            background: #1a1a1a;
+            border-radius: 4px;
+            padding: 18px 20px;
+            animation: Fu_fadeUp 0.9s ease both;
+        }
+
+        .Fu_response h2 {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            color: #8a8a8a;
+            margin-bottom: 12px;
+        }
+
+        .Fu_response pre {
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 12.5px;
+            color: #7ee787;
+            white-space: pre-wrap;
+            word-break: break-all;
+            line-height: 1.7;
+        }
+
+        .Fu_footer {
+            text-align: center;
+            margin-top: 52px;
+            padding-top: 24px;
+            border-top: 1px solid #e8e8e8;
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: #a8a8a8;
+        }
+
+        @keyframes Fu_fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="Fu_wrap">
+        <header class="Fu_header">
+            <div class="Fu_badge">929 · 傅若涵</div>
+            <h1>Fetch · 获取随机狗狗图片</h1>
+            <p class="Fu_sub">调用 Dog CEO API · 原生 fetch + async/await · 跨域直连</p>
+            <div class="Fu_line"></div>
+        </header>
+
+        <section class="Fu_info">
+            <h2>接口信息</h2>
+            <p><code>GET https://dog.ceo/api/breed/hound/images/random/3</code> — 返回 3 张 hound 品种狗狗随机图片，接口已开启 CORS，前端可直接跨域访问。</p>
+        </section>
+
+        <div class="Fu_action">
+            <button class="Fu_btn Fu_btnPrimary" id="Fu_btnFetch">获取图片</button>
+            <button class="Fu_btn Fu_btnGhost" id="Fu_btnClear">清空</button>
+        </div>
+
+        <div class="Fu_status" id="Fu_status">点击「获取图片」开始请求</div>
+
+        <main class="Fu_grid" id="Fu_grid">
+            <!-- JS 动态渲染 -->
+        </main>
+
+        <section class="Fu_response" id="Fu_response" style="display:none;">
+            <h2>响应体（原始 JSON）</h2>
+            <pre id="Fu_preview"></pre>
+        </section>
+
+        <footer class="Fu_footer">© 2026 傅若涵 · 学号 929 · 高级网页设计</footer>
+    </div>
+
+    <script>
+        const Fu_apiUrl = "https://dog.ceo/api/breed/hound/images/random/3";
+        const Fu_grid = document.getElementById("Fu_grid");
+        const Fu_status = document.getElementById("Fu_status");
+        const Fu_response = document.getElementById("Fu_response");
+        const Fu_preview = document.getElementById("Fu_preview");
+
+        // 骨架屏：3 个占位盒子
+        function Fu_renderSkeleton() {
+            let Fu_html = "";
+            for (let Fu_i = 0; Fu_i < 3; Fu_i++) {
+                Fu_html += '<div class="Fu_cell Fu_skeleton">'
+                         + '<img alt="加载中">'
+                         + '<div class="Fu_meta">loading…</div>'
+                         + '</div>';
+            }
+            Fu_grid.innerHTML = Fu_html;
+        }
+
+        // 清空
+        function Fu_clearAll() {
+            Fu_grid.innerHTML = "";
+            Fu_status.textContent = "已清空，点击「获取图片」重新请求";
+            Fu_status.className = "Fu_status";
+            Fu_response.style.display = "none";
+            Fu_preview.textContent = "";
+        }
+
+        // 渲染图片卡片
+        function Fu_renderImages(Fu_urls) {
+            let Fu_html = "";
+            Fu_urls.forEach(function (Fu_url, Fu_idx) {
+                Fu_html += '<div class="Fu_cell">'
+                         + '<img src="' + Fu_url + '" alt="狗狗 ' + (Fu_idx + 1) + '" onerror="this.style.background=\'#fee\';this.alt=\'图片加载失败\'">'
+                         + '<div class="Fu_meta">图片 ' + (Fu_idx + 1) + '<br><code>' + Fu_url + '</code></div>'
+                         + '</div>';
+            });
+            Fu_grid.innerHTML = Fu_html;
+        }
+
+        // 渲染错误
+        function Fu_renderError(Fu_msg) {
+            Fu_grid.innerHTML = '<div class="Fu_errbox" style="grid-column: 1 / -1;">❌ ' + Fu_msg + '</div>';
+        }
+
+        // 核心 fetch
+        async function Fu_fetchDogs() {
+            Fu_status.textContent = "请求中…";
+            Fu_status.className = "Fu_status";
+            Fu_renderSkeleton();
+            Fu_response.style.display = "none";
+
+            try {
+                const Fu_resp = await fetch(Fu_apiUrl);
+
+                if (!Fu_resp.ok) {
+                    throw new Error("HTTP " + Fu_resp.status + " " + Fu_resp.statusText);
+                }
+
+                const Fu_data = await Fu_resp.json();
+
+                // 展示原始响应
+                Fu_preview.textContent = JSON.stringify(Fu_data, null, 2);
+                Fu_response.style.display = "block";
+
+                if (Fu_data.status !== "success" || !Array.isArray(Fu_data.message)) {
+                    throw new Error("接口返回格式异常");
+                }
+
+                Fu_renderImages(Fu_data.message);
+                Fu_status.textContent = "✅ 请求成功，共拿到 " + Fu_data.message.length + " 张图片";
+                Fu_status.className = "Fu_status Fu_ok";
+                console.log("傅若涵 17-2 fetch 成功：", Fu_data);
+            } catch (Fu_err) {
+                Fu_renderError(Fu_err.message);
+                Fu_status.textContent = "❌ 请求失败：" + Fu_err.message;
+                Fu_status.className = "Fu_status Fu_err";
+                console.error("傅若涵 17-2 fetch 失败：", Fu_err);
+            }
+        }
+
+        document.getElementById("Fu_btnFetch").addEventListener("click", Fu_fetchDogs);
+        document.getElementById("Fu_btnClear").addEventListener("click", Fu_clearAll);
+
+        // 页面加载后自动请求一次
+        Fu_fetchDogs();
+    </script>
+</body>
+</html>
