@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>18-7 Three.js · 3D 数据中心 + 智能客服头像 · 傅若涵</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            padding: 56px 20px 40px;
+        }
+        .Fu_wrap { max-width: 1280px; margin: 0 auto; }
+
+        .Fu_header { text-align: center; margin-bottom: 28px; animation: Fu_fadeUp 0.7s ease both; }
+        .Fu_badge { display: inline-block; padding: 5px 16px; border-radius: 2px; font-size: 12px; letter-spacing: 4px; color: #fff; background: #1a1a1a; margin-bottom: 14px; border: 1px solid #333; }
+        .Fu_header h1 { font-size: 26px; font-weight: 500; letter-spacing: 4px; color: #fff; }
+        .Fu_header .Fu_sub { margin-top: 6px; font-size: 13px; color: #888; letter-spacing: 2px; }
+
+        .Fu_pair {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+            animation: Fu_fadeUp 0.75s ease both;
+        }
+        @media (max-width: 1000px) { .Fu_pair { grid-template-columns: 1fr; } }
+
+        .Fu_chartBox {
+            background: #111118; border: 1px solid #1e1e2e; border-radius: 4px;
+            padding: 16px; display: flex; flex-direction: column;
+        }
+        .Fu_chartBox h2 {
+            font-size: 13px; font-weight: 600; letter-spacing: 2px; color: #888;
+            padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid #1e1e2e;
+        }
+        .Fu_chartBox .Fu_desc { font-size: 12px; color: #666; margin-bottom: 10px; line-height: 1.6; }
+        .Fu_scene { width: 100%; height: 560px; background: #05050a; border-radius: 3px; overflow: hidden; display: block; }
+
+        .Fu_footer { text-align: center; margin-top: 42px; padding-top: 18px; border-top: 1px solid #1e1e2e; font-size: 11px; letter-spacing: 2px; color: #555; animation: Fu_fadeUp 0.85s ease both; }
+        @keyframes Fu_fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    </style>
+
+    <!-- import map：让 OrbitControls 等模块 import 'three' 时能找到本地 three.module.js -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "./cdn/three.module.js",
+            "three/addons/": "./cdn/"
+        }
+    }
+    </script>
+</head>
+<body>
+    <div class="Fu_wrap">
+        <header class="Fu_header">
+            <div class="Fu_badge">929 · 傅若涵</div>
+            <h1>Three.js · 3D 场景演示</h1>
+            <p class="Fu_sub">粒子化数据中心 · 智能客服 AI 头像 · three.module.js 本地 CDN</p>
+        </header>
+
+        <main class="Fu_pair">
+            <section class="Fu_chartBox">
+                <h2>图① · 粒子化数据中心（点云立方体阵列 + 连线）</h2>
+                <p class="Fu_desc">12×8×4 立方体阵列，每个顶点一个粒子；相邻粒子连线构成网格；脉冲波从中心向外扩散。OrbitControls 鼠标拖拽旋转。</p>
+                <canvas id="Fu_scene1" class="Fu_scene"></canvas>
+            </section>
+
+            <section class="Fu_chartBox">
+                <h2>图② · 智能客服 AI 头像（几何体拼装 + 呼吸动画）</h2>
+                <p class="Fu_desc">头（球体）+ 眼（发光椭球）+ 嘴（弧线 torus）+ 天线（细柱 + 光球）；呼吸缩放 + 眼部发光脉冲。</p>
+                <canvas id="Fu_scene2" class="Fu_scene"></canvas>
+            </section>
+        </main>
+
+        <footer class="Fu_footer">© 2026 傅若涵 · 学号 929 · Three.js 3D · ES module import map</footer>
+    </div>
+
+    <script type="module">
+    import * as THREE from "./cdn/three.module.js";
+    import { OrbitControls } from "./cdn/OrbitControls.js";
+
+    // ============================================================
+    // 场景①：粒子化数据中心 —— 立方体阵列 + 连线 + 脉冲
+    // ============================================================
+    (function Fu_scene1() {
+        const Fu_canvas = document.getElementById("Fu_scene1");
+        const Fu_scene = new THREE.Scene();
+        Fu_scene.background = new THREE.Color(0x05050a);
+
+        const Fu_camera = new THREE.PerspectiveCamera(50, Fu_canvas.clientWidth / Fu_canvas.clientHeight, 0.1, 1000);
+        Fu_camera.position.set(16, 12, 22);
+
+        const Fu_renderer = new THREE.WebGLRenderer({ canvas: Fu_canvas, antialias: true });
+        Fu_renderer.setPixelRatio(window.devicePixelRatio);
+        Fu_renderer.setSize(Fu_canvas.clientWidth, Fu_canvas.clientHeight);
+
+        const Fu_controls = new OrbitControls(Fu_camera, Fu_canvas);
+        Fu_controls.enableDamping = true;
+        Fu_controls.dampingFactor = 0.08;
+
+        // 背景星点（大粒子 + 小粒子）
+        const Fu_bgGeo = new THREE.BufferGeometry();
+        const Fu_bgCount = 600;
+        const Fu_bgPos = new Float32Array(Fu_bgCount * 3);
+        for (let Fu_i = 0; Fu_i < Fu_bgCount; Fu_i++) {
+            Fu_bgPos[Fu_i * 3 + 0] = (Math.random() - 0.5) * 100;
+            Fu_bgPos[Fu_i * 3 + 1] = (Math.random() - 0.5) * 100;
+            Fu_bgPos[Fu_i * 3 + 2] = (Math.random() - 0.5) * 100;
+        }
+        Fu_bgGeo.setAttribute("position", new THREE.BufferAttribute(Fu_bgPos, 3));
+        const Fu_bgMat = new THREE.PointsMaterial({ color: 0x2a2a3a, size: 0.15, transparent: true, opacity: 0.7 });
+        Fu_scene.add(new THREE.Points(Fu_bgGeo, Fu_bgMat));
+
+        // ===== 立方体阵列 =====
+        const Fu_GX = 12, Fu_GY = 8, Fu_GZ = 4;
+        const Fu_spacing = 1.4;
+        const Fu_group = new THREE.Group();
+
+        // 顶点粒子
+        const Fu_vertexCount = (Fu_GX + 1) * (Fu_GY + 1) * (Fu_GZ + 1);
+        const Fu_vtxGeo = new THREE.BufferGeometry();
+        const Fu_vtxPos = new Float32Array(Fu_vertexCount * 3);
+        const Fu_vtxColor = new Float32Array(Fu_vertexCount * 3);
+        const Fu_center = new THREE.Vector3(0, Fu_GY * Fu_spacing / 2, Fu_GZ * Fu_spacing / 2);
+        let Fu_vi = 0;
+
+        for (let Fu_x = 0; Fu_x <= Fu_GX; Fu_x++) {
+            for (let Fu_y = 0; Fu_y <= Fu_GY; Fu_y++) {
+                for (let Fu_z = 0; Fu_z <= Fu_GZ; Fu_z++) {
+                    const Fu_px = Fu_x * Fu_spacing - Fu_GX * Fu_spacing / 2;
+                    const Fu_py = Fu_y * Fu_spacing;
+                    const Fu_pz = Fu_z * Fu_spacing;
+                    Fu_vtxPos[Fu_vi * 3 + 0] = Fu_px;
+                    Fu_vtxPos[Fu_vi * 3 + 1] = Fu_py;
+                    Fu_vtxPos[Fu_vi * 3 + 2] = Fu_pz;
+
+                    // 颜色：靠中心偏冷蓝，偏远偏暖紫
+                    const Fu_dist = new THREE.Vector3(Fu_px, Fu_py, Fu_pz).distanceTo(Fu_center);
+                    const Fu_t = Math.min(1, Fu_dist / 12);
+                    Fu_vtxColor[Fu_vi * 3 + 0] = 0.2 + Fu_t * 0.5;   // R
+                    Fu_vtxColor[Fu_vi * 3 + 1] = 0.4 - Fu_t * 0.2;   // G
+                    Fu_vtxColor[Fu_vi * 3 + 2] = 0.7 - Fu_t * 0.3;   // B
+                    Fu_vi++;
+                }
+            }
+        }
+        Fu_vtxGeo.setAttribute("position", new THREE.BufferAttribute(Fu_vtxPos, 3));
+        Fu_vtxGeo.setAttribute("color", new THREE.BufferAttribute(Fu_vtxColor, 3));
+        const Fu_vtxMat = new THREE.PointsMaterial({
+            size: 0.22, vertexColors: true,
+            transparent: true, opacity: 0.95, sizeAttenuation: true
+        });
+        const Fu_points = new THREE.Points(Fu_vtxGeo, Fu_vtxMat);
+        Fu_points.position.y = -Fu_GY * Fu_spacing / 2;
+        Fu_group.add(Fu_points);
+
+        // 连线 —— 只连沿 X / Y / Z 方向相邻的顶点
+        const Fu_lineIdx = [];
+        for (let Fu_x = 0; Fu_x <= Fu_GX; Fu_x++) {
+            for (let Fu_y = 0; Fu_y <= Fu_GY; Fu_y++) {
+                for (let Fu_z = 0; Fu_z <= Fu_GZ; Fu_z++) {
+                    const Fu_idx = Fu_x * (Fu_GY + 1) * (Fu_GZ + 1) + Fu_y * (Fu_GZ + 1) + Fu_z;
+                    if (Fu_x < Fu_GX) Fu_lineIdx.push(Fu_idx, Fu_idx + (Fu_GY + 1) * (Fu_GZ + 1));
+                    if (Fu_y < Fu_GY) Fu_lineIdx.push(Fu_idx, Fu_idx + (Fu_GZ + 1));
+                    if (Fu_z < Fu_GZ) Fu_lineIdx.push(Fu_idx, Fu_idx + 1);
+                }
+            }
+        }
+        const Fu_lineGeo = new THREE.BufferGeometry();
+        Fu_lineGeo.setAttribute("position", new THREE.BufferAttribute(Fu_vtxPos, 3));
+        Fu_lineGeo.setAttribute("color", new THREE.BufferAttribute(Fu_vtxColor, 3));
+        Fu_lineGeo.setIndex(Fu_lineIdx);
+        const Fu_lineMat = new THREE.LineBasicMaterial({
+            vertexColors: true, transparent: true, opacity: 0.28
+        });
+        const Fu_lines = new THREE.LineSegments(Fu_lineGeo, Fu_lineMat);
+        Fu_lines.position.y = -Fu_GY * Fu_spacing / 2;
+        Fu_group.add(Fu_lines);
+
+        // 地面发光圆（数据中心地面）
+        const Fu_floorGeo = new THREE.CircleGeometry(20, 48);
+        const Fu_floorMat = new THREE.MeshBasicMaterial({
+            color: 0x1a2a3a, transparent: true, opacity: 0.12, side: THREE.DoubleSide
+        });
+        const Fu_floor = new THREE.Mesh(Fu_floorGeo, Fu_floorMat);
+        Fu_floor.rotation.x = -Math.PI / 2;
+        Fu_group.add(Fu_floor);
+
+        Fu_scene.add(Fu_group);
+
+        // ===== 脉冲波 —— 绕中心不断扩大的环 =====
+        const Fu_pulseGeo = new THREE.RingGeometry(0.3, 0.5, 64);
+        const Fu_pulseMat = new THREE.MeshBasicMaterial({
+            color: 0x4a9eff, transparent: true, opacity: 0.9, side: THREE.DoubleSide
+        });
+        const Fu_pulse = new THREE.Mesh(Fu_pulseGeo, Fu_pulseMat);
+        Fu_pulse.rotation.x = -Math.PI / 2;
+        Fu_pulse.position.y = -Fu_GY * Fu_spacing / 2 + 0.1;
+        Fu_group.add(Fu_pulse);
+
+        // 灯光
+        const Fu_ambient = new THREE.AmbientLight(0x334455, 0.6);
+        Fu_scene.add(Fu_ambient);
+        const Fu_dir = new THREE.DirectionalLight(0x88aaff, 0.7);
+        Fu_dir.position.set(10, 20, 15);
+        Fu_scene.add(Fu_dir);
+
+        // 动画
+        let Fu_t = 0;
+        function Fu_animate1() {
+            requestAnimationFrame(Fu_animate1);
+            Fu_t += 0.01;
+            // 阵列整体缓慢旋转
+            Fu_group.rotation.y = Fu_t * 0.15;
+            // 脉冲波
+            const Fu_r = (Fu_t * 2) % 18;
+            Fu_pulse.scale.setScalar(1 + Fu_r);
+            Fu_pulseMat.opacity = Math.max(0, 0.9 - Fu_r * 0.05);
+            Fu_pulseGeo.dispose();
+            Fu_pulseGeo = new THREE.RingGeometry(0.3, 0.5, 64);
+            Fu_pulse.geometry = Fu_pulseGeo;
+
+            Fu_controls.update();
+            Fu_renderer.render(Fu_scene, Fu_camera);
+        }
+        Fu_animate1();
+
+        // resize
+        new ResizeObserver(function () {
+            Fu_camera.aspect = Fu_canvas.clientWidth / Fu_canvas.clientHeight;
+            Fu_camera.updateProjectionMatrix();
+            Fu_renderer.setSize(Fu_canvas.clientWidth, Fu_canvas.clientHeight);
+        }).observe(Fu_canvas);
+    })();
+
+    // ============================================================
+    // 场景②：智能客服 AI 头像 —— 球体拼装 + 呼吸 + 眼部发光
+    // ============================================================
+    (function Fu_scene2() {
+        const Fu_canvas = document.getElementById("Fu_scene2");
+        const Fu_scene = new THREE.Scene();
+        Fu_scene.background = new THREE.Color(0x05050a);
+
+        const Fu_camera = new THREE.PerspectiveCamera(45, Fu_canvas.clientWidth / Fu_canvas.clientHeight, 0.1, 1000);
+        Fu_camera.position.set(0, 0, 9);
+
+        const Fu_renderer = new THREE.WebGLRenderer({ canvas: Fu_canvas, antialias: true });
+        Fu_renderer.setPixelRatio(window.devicePixelRatio);
+        Fu_renderer.setSize(Fu_canvas.clientWidth, Fu_canvas.clientHeight);
+
+        const Fu_controls = new OrbitControls(Fu_camera, Fu_canvas);
+        Fu_controls.enableDamping = true;
+        Fu_controls.dampingFactor = 0.08;
+
+        // ===== AI 头像组 =====
+        const Fu_headGroup = new THREE.Group();
+
+        // 主体头（圆角立方体 + 球体感 —— 用 icosahedron 近似）
+        const Fu_headGeo = new THREE.IcosahedronGeometry(1.6, 1);
+        const Fu_headMat = new THREE.MeshStandardMaterial({
+            color: 0x1a2a3a, metalness: 0.3, roughness: 0.4,
+            flatShading: false
+        });
+        const Fu_head = new THREE.Mesh(Fu_headGeo, Fu_headMat);
+        Fu_headGroup.add(Fu_head);
+
+        // 内层发光球
+        const Fu_innerGeo = new THREE.SphereGeometry(1.35, 32, 24);
+        const Fu_innerMat = new THREE.MeshBasicMaterial({
+            color: 0x3a5a7a, transparent: true, opacity: 0.15
+        });
+        Fu_headGroup.add(new THREE.Mesh(Fu_innerGeo, Fu_innerMat));
+
+        // 左眼
+        const Fu_eyeGeo = new THREE.SphereGeometry(0.28, 16, 12);
+        const Fu_eyeMat = new THREE.MeshStandardMaterial({
+            color: 0x88ccff, emissive: 0x2288dd, emissiveIntensity: 1.8,
+            metalness: 0.6, roughness: 0.2
+        });
+        const Fu_eyeL = new THREE.Mesh(Fu_eyeGeo, Fu_eyeMat);
+        Fu_eyeL.position.set(-0.55, 0.2, 1.35);
+        Fu_headGroup.add(Fu_eyeL);
+
+        const Fu_eyeR = Fu_eyeL.clone();
+        Fu_eyeR.position.x = 0.55;
+        Fu_headGroup.add(Fu_eyeR);
+
+        // 眼部外发光（用 Sprite 贴图）
+        const Fu_eyeGlowMat = new THREE.SpriteMaterial({
+            color: 0x44aaff, transparent: true, opacity: 0.35, depthWrite: false,
+            blending: THREE.AdditiveBlending
+        });
+        const Fu_glowL = new THREE.Sprite(Fu_eyeGlowMat);
+        Fu_glowL.position.copy(Fu_eyeL.position);
+        Fu_glowL.scale.setScalar(1.5);
+        Fu_headGroup.add(Fu_glowL);
+        const Fu_glowR = Fu_glowL.clone();
+        Fu_glowR.position.copy(Fu_eyeR.position);
+        Fu_headGroup.add(Fu_glowR);
+
+        // 嘴（torus 弧形）
+        const Fu_mouthGeo = new THREE.TorusGeometry(0.45, 0.05, 8, 24, Math.PI);
+        const Fu_mouthMat = new THREE.MeshStandardMaterial({
+            color: 0x6688aa, emissive: 0x1144aa, emissiveIntensity: 0.6
+        });
+        const Fu_mouth = new THREE.Mesh(Fu_mouthGeo, Fu_mouthMat);
+        Fu_mouth.position.set(0, -0.55, 1.3);
+        Fu_mouth.rotation.z = Math.PI; // 翻转成笑嘴
+        Fu_headGroup.add(Fu_mouth);
+
+        // 天线（细柱 + 顶端发光球）
+        const Fu_antGeo = new THREE.CylinderGeometry(0.03, 0.04, 0.8, 8);
+        const Fu_antMat = new THREE.MeshStandardMaterial({ color: 0x555577, metalness: 0.5, roughness: 0.4 });
+        const Fu_ant = new THREE.Mesh(Fu_antGeo, Fu_antMat);
+        Fu_ant.position.set(0, 1.95, 0);
+        Fu_headGroup.add(Fu_ant);
+
+        const Fu_antTipGeo = new THREE.SphereGeometry(0.14, 16, 12);
+        const Fu_antTipMat = new THREE.MeshStandardMaterial({
+            color: 0xffaa44, emissive: 0xff6622, emissiveIntensity: 2.0
+        });
+        const Fu_antTip = new THREE.Mesh(Fu_antTipGeo, Fu_antTipMat);
+        Fu_antTip.position.set(0, 2.45, 0);
+        Fu_headGroup.add(Fu_antTip);
+
+        Fu_scene.add(Fu_headGroup);
+
+        // 背景星云（点云）
+        const Fu_starGeo = new THREE.BufferGeometry();
+        const Fu_starN = 800;
+        const Fu_starPos = new Float32Array(Fu_starN * 3);
+        for (let Fu_i = 0; Fu_i < Fu_starN; Fu_i++) {
+            Fu_starPos[Fu_i * 3 + 0] = (Math.random() - 0.5) * 50;
+            Fu_starPos[Fu_i * 3 + 1] = (Math.random() - 0.5) * 50;
+            Fu_starPos[Fu_i * 3 + 2] = (Math.random() - 0.5) * 50;
+        }
+        Fu_starGeo.setAttribute("position", new THREE.BufferAttribute(Fu_starPos, 3));
+        const Fu_starMat = new THREE.PointsMaterial({ color: 0x446688, size: 0.08, transparent: true, opacity: 0.6 });
+        Fu_scene.add(new THREE.Points(Fu_starGeo, Fu_starMat));
+
+        // 灯光
+        const Fu_ambient2 = new THREE.AmbientLight(0x223344, 0.5);
+        Fu_scene.add(Fu_ambient2);
+        const Fu_key = new THREE.DirectionalLight(0xaaccff, 1.0);
+        Fu_key.position.set(3, 5, 4);
+        Fu_scene.add(Fu_key);
+        const Fu_fill = new THREE.DirectionalLight(0x336699, 0.5);
+        Fu_fill.position.set(-4, -2, -3);
+        Fu_scene.add(Fu_fill);
+
+        // 动画：呼吸 + 眼部发光脉冲
+        let Fu_t = 0;
+        function Fu_animate2() {
+            requestAnimationFrame(Fu_animate2);
+            Fu_t += 0.02;
+
+            // 整体呼吸缩放（轻微）
+            const Fu_breath = 1 + Math.sin(Fu_t) * 0.025;
+            Fu_headGroup.scale.setScalar(Fu_breath);
+            Fu_headGroup.rotation.y = Fu_t * 0.35;
+
+            // 眼部发光脉冲
+            const Fu_eyeIntensity = 1.2 + Math.sin(Fu_t * 2) * 1.0;
+            Fu_eyeMat.emissiveIntensity = Fu_eyeIntensity;
+            Fu_eyeGlowMat.opacity = 0.2 + Math.abs(Math.sin(Fu_t * 2)) * 0.5;
+
+            // 天线顶端脉冲
+            Fu_antTipMat.emissiveIntensity = 1.5 + Math.sin(Fu_t * 3) * 1.2;
+
+            Fu_controls.update();
+            Fu_renderer.render(Fu_scene, Fu_camera);
+        }
+        Fu_animate2();
+
+        new ResizeObserver(function () {
+            Fu_camera.aspect = Fu_canvas.clientWidth / Fu_canvas.clientHeight;
+            Fu_camera.updateProjectionMatrix();
+            Fu_renderer.setSize(Fu_canvas.clientWidth, Fu_canvas.clientHeight);
+        }).observe(Fu_canvas);
+    })();
+    </script>
+</body>
+</html>
