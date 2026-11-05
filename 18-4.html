@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>18-4 ECharts · 3D 地球等值线动画 + 自定义风场 · 傅若涵</title>
+    <script src="./cdn/echarts.min.js"></script>
+    <script src="./cdn/echarts-gl.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+            background: #f4f4f4;
+            color: #1a1a1a;
+            padding: 56px 20px 40px;
+        }
+        .Fu_wrap { max-width: 1280px; margin: 0 auto; }
+
+        .Fu_header { text-align: center; margin-bottom: 28px; animation: Fu_fadeUp 0.7s ease both; }
+        .Fu_badge { display: inline-block; padding: 5px 16px; border-radius: 2px; font-size: 12px; letter-spacing: 4px; color: #fff; background: #1a1a1a; margin-bottom: 14px; }
+        .Fu_header h1 { font-size: 26px; font-weight: 500; letter-spacing: 4px; color: #111; }
+        .Fu_header .Fu_sub { margin-top: 6px; font-size: 13px; color: #8a8a8a; letter-spacing: 2px; }
+
+        .Fu_pair {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+            animation: Fu_fadeUp 0.75s ease both;
+        }
+        @media (max-width: 900px) { .Fu_pair { grid-template-columns: 1fr; } }
+
+        .Fu_chartBox {
+            background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 16px;
+            display: flex; flex-direction: column;
+        }
+        .Fu_chartBox h2 {
+            font-size: 13px; font-weight: 600; letter-spacing: 2px; color: #8a8a8a;
+            padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid #eee;
+        }
+        .Fu_chartBox .Fu_desc { font-size: 12px; color: #555; margin-bottom: 10px; line-height: 1.6; }
+        .Fu_chart { width: 100%; height: 560px; background: #0b0d17; border-radius: 3px; }
+
+        .Fu_footer { text-align: center; margin-top: 42px; padding-top: 18px; border-top: 1px solid #e0e0e0; font-size: 11px; letter-spacing: 2px; color: #8a8a8a; animation: Fu_fadeUp 0.85s ease both; }
+        @keyframes Fu_fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    </style>
+</head>
+<body>
+    <div class="Fu_wrap">
+        <header class="Fu_header">
+            <div class="Fu_badge">929 · 傅若涵</div>
+            <h1>ECharts · 3D 地球可视化</h1>
+            <p class="Fu_sub">等值线动画地球 · 自定义风场（Custom Series） · echarts-gl</p>
+        </header>
+
+        <main class="Fu_pair">
+            <section class="Fu_chartBox">
+                <h2>图① · 3D 地球等值线动画</h2>
+                <p class="Fu_desc">ECharts-GL globe + 自定义 visualMap 渲染等值面效果，散点随时间脉动模拟数值场在地球上的演化。</p>
+                <div id="Fu_globeChart" class="Fu_chart"></div>
+            </section>
+
+            <section class="Fu_chartBox">
+                <h2>图② · 自定义风场 Custom Series</h2>
+                <p class="Fu_desc">fetch 加载 winds.json（240×121 网格），每条风矢用 globe 上的短线段 + 渐变颜色绘制，自定义渲染管线。</p>
+                <div id="Fu_windChart" class="Fu_chart"></div>
+            </section>
+        </main>
+
+        <footer class="Fu_footer">© 2026 傅若涵 · 学号 929 · ECharts 3D 可视化 · CDN 本地化</footer>
+    </div>
+
+    <script>
+    // ============================================================
+    // 图①：3D 地球等值线动画 —— globe + effectScatter + 动画
+    // ============================================================
+    (function Fu_earthContour() {
+        const Fu_el = document.getElementById("Fu_globeChart");
+        const Fu_chart = echarts.init(Fu_el, null, { renderer: "canvas" });
+
+        // 生成一批覆盖全球的模拟数据点（经纬度 + 一个标量值 0~1）
+        const Fu_points = [];
+        // 纬度：-60 ~ 60（避开极圈），经度：-180 ~ 180
+        for (let Fu_lat = -55; Fu_lat <= 55; Fu_lat += 5) {
+            for (let Fu_lon = -170; Fu_lon <= 170; Fu_lon += 10) {
+                // 用三角函数叠加制造几个"高压中心"，视觉上像等值面
+                const Fu_val = Math.abs(
+                    0.5 +
+                    Math.sin(Fu_lon * 0.04 + 0.7) * 0.35 +
+                    Math.cos(Fu_lat * 0.05) * 0.25 +
+                    Math.sin((Fu_lon + Fu_lat) * 0.03) * 0.15
+                );
+                Fu_points.push([Fu_lon, Fu_lat, Math.min(1, Fu_val)]);
+            }
+        }
+
+        const Fu_option = {
+            backgroundColor: "#0b0d17",
+            globe: {
+                // 基础底图
+                baseTexture: "https://echarts.apache.org/examples/data-gl/asset/world.topo.bathy.200406.3x512.jpg",
+                // 高度贴图（凹凸感）
+                heightTexture: "https://echarts.apache.org/examples/data-gl/asset/bathymetry_bw_composite_4k.jpg",
+                displacementScale: 0.04,
+                displacementQuality: "medium",
+                shading: "realistic",
+                realisticMaterial: {
+                    roughness: 0.9,
+                    metalness: 0
+                },
+                environment: "https://echarts.apache.org/examples/data-gl/asset/starfield.jpg",
+                atmosphere: { show: true, blur: 0.25, offsetY: 0.1 },
+                light: {
+                    main: { intensity: 1.2, shadow: false, shadowQuality: "low", alpha: 40 },
+                    ambient: { intensity: 0.4 }
+                },
+                viewControl: {
+                    autoRotate: true,
+                    autoRotateSpeed: 8,
+                    distance: 160,
+                    alpha: 25,
+                    beta: 10
+                },
+                postEffect: { enable: true, SSAO: { enable: true, radius: 2, intensity: 1 } },
+                groundPlane: { show: false }
+            },
+            visualMap: {
+                show: true,
+                left: 24, bottom: 24,
+                dimension: 2,
+                categories: ["冷 (0~0.3)", "温 (0.3~0.6)", "暖 (0.6~1.0)"],
+                inRange: { color: ["#1a365d", "#3182ce", "#63b3ed", "#f6ad55", "#e53e3e"] },
+                seriesIndex: 0,
+                textStyle: { color: "#ccc", fontSize: 11 }
+            },
+            series: [
+                {
+                    name: "数值场散点",
+                    type: "effectScatter",
+                    coordinateSystem: "globe",
+                    // 关键：让 visualMap 驱动点大小和颜色
+                    encode: { value: 2, lng: 0, lat: 1 },
+                    symbolSize: function (Fu_val) {
+                        return 2 + Fu_val[2] * 10;
+                    },
+                    itemStyle: {
+                        borderWidth: 0
+                    },
+                    rippleEffect: {
+                        brushType: "stroke",
+                        scale: 3,
+                        period: 3
+                    },
+                    data: Fu_points,
+                    zlevel: 1
+                }
+            ]
+        };
+
+        Fu_chart.setOption(Fu_option);
+
+        // 让数值场随时间脉动（模拟"动画"）
+        let Fu_t = 0;
+        setInterval(function Fu_anim() {
+            Fu_t += 0.08;
+            Fu_points.forEach(function (Fu_p, Fu_idx) {
+                Fu_p[2] = Math.max(
+                    0.15,
+                    Math.min(
+                        1,
+                        0.5 +
+                        Math.sin(Fu_p[0] * 0.04 + Fu_t) * 0.35 +
+                        Math.cos(Fu_p[1] * 0.05 + Fu_t * 0.6) * 0.25 +
+                        Math.sin((Fu_p[0] + Fu_p[1]) * 0.03 + Fu_t * 1.3) * 0.15
+                    )
+                );
+            });
+            Fu_chart.setOption({
+                series: [{ data: Fu_points }]
+            });
+        }, 500);
+
+        window.addEventListener("resize", function () { Fu_chart.resize(); });
+    })();
+
+    // ============================================================
+    // 图②：自定义风场 Custom Series —— globe
+    // ============================================================
+    (function Fu_windCustom() {
+        const Fu_el = document.getElementById("Fu_windChart");
+        const Fu_chart = echarts.init(Fu_el, null, { renderer: "canvas" });
+
+        const Fu_option_base = {
+            backgroundColor: "#0b0d17",
+            globe: {
+                baseTexture: "https://echarts.apache.org/examples/data-gl/asset/world.topo.bathy.200406.3x512.jpg",
+                heightTexture: "https://echarts.apache.org/examples/data-gl/asset/bathymetry_bw_composite_4k.jpg",
+                displacementScale: 0.04,
+                shading: "realistic",
+                environment: "https://echarts.apache.org/examples/data-gl/asset/starfield.jpg",
+                atmosphere: { show: true, blur: 0.25, offsetY: 0.1 },
+                light: { main: { intensity: 1.2 }, ambient: { intensity: 0.4 } },
+                viewControl: { autoRotate: true, autoRotateSpeed: 6, distance: 160, alpha: 25, beta: 10 },
+                postEffect: { enable: true, SSAO: { enable: true } }
+            },
+            visualMap: {
+                show: true,
+                left: 24, bottom: 24,
+                min: 0, max: 20,
+                inRange: { color: ["#1a365d", "#3182ce", "#38b2ac", "#ecc94b", "#f6ad55", "#e53e3e"] },
+                textStyle: { color: "#ccc", fontSize: 11 },
+                calculable: true
+            },
+            tooltip: { formatter: function (Fu_p) {
+                return "经度: " + Fu_p.data.value[0].toFixed(1) + "°<br>" +
+                       "纬度: " + Fu_p.data.value[1].toFixed(1) + "°<br>" +
+                       "风速: " + Fu_p.data.mag.toFixed(2);
+            }}
+        };
+        Fu_chart.setOption(Fu_option_base);
+
+        // fetch 本地 winds.json
+        fetch("./cdn/data-gl/asset/data/winds.json")
+            .then(function (Fu_r) { return Fu_r.json(); })
+            .then(function (Fu_windData) {
+                const Fu_p = 0;
+                const Fu_data = [];
+                const Fu_windU = Fu_windData.data; // [[u,v], [u,v], ...]
+                const Fu_nx = Fu_windData.nx;
+                const Fu_ny = Fu_windData.ny;
+                let Fu_maxMag = 0;
+                let Fu_minMag = Infinity;
+                const Fu_raw = [];
+
+                for (let Fu_j = 0; Fu_j < Fu_ny; Fu_j++) {
+                    for (let Fu_i = 0; Fu_i < Fu_nx; Fu_i++) {
+                        const Fu_vx = Fu_windU[Fu_j * Fu_nx + Fu_i][0];
+                        const Fu_vy = Fu_windU[Fu_j * Fu_nx + Fu_i][1];
+                        const Fu_mag = Math.sqrt(Fu_vx * Fu_vx + Fu_vy * Fu_vy);
+                        Fu_maxMag = Math.max(Fu_maxMag, Fu_mag);
+                        Fu_minMag = Math.min(Fu_minMag, Fu_mag);
+                        Fu_raw.push([
+                            (Fu_i / Fu_nx) * 360 - 180,
+                            (Fu_j / Fu_ny) * 180 - 90,
+                            Fu_vx, Fu_vy, Fu_mag
+                        ]);
+                    }
+                }
+
+                // 抽稀：原 240×121 ≈ 29000 个点，全部渲染会卡；按 3×3 网格取 1/9
+                const Fu_step = 3;
+                for (let Fu_i = 0; Fu_i < Fu_raw.length; Fu_i += Fu_step) {
+                    Fu_data.push({ value: [Fu_raw[Fu_i][0], Fu_raw[Fu_i][1], Fu_raw[Fu_i][4]], vx: Fu_raw[Fu_i][2], vy: Fu_raw[Fu_i][3], mag: Fu_raw[Fu_i][4] });
+                }
+
+                // 地球坐标系下的自定义 wind 系列
+                Fu_chart.setOption({
+                    visualMap: { min: Fu_minMag, max: Fu_maxMag },
+                    series: [
+                        {
+                            type: "custom",
+                            coordinateSystem: "globe",
+                            data: Fu_data,
+                            encode: { value: 2 },
+                            renderItem: function (Fu_params, Fu_api) {
+                                // globe 坐标系把 [lon, lat] 投射成屏幕 [x, y, z]
+                                const Fu_coord = Fu_api.coord([
+                                    Fu_params.data.value[0],
+                                    Fu_params.data.value[1],
+                                    0.01
+                                ]);
+                                const Fu_coord2 = Fu_api.coord([
+                                    Fu_params.data.value[0] + Fu_params.data.vx * 0.5,
+                                    Fu_params.data.value[1] + Fu_params.data.vy * 0.5,
+                                    0.01
+                                ]);
+                                const Fu_color = Fu_api.visual("color", Fu_params.data.mag);
+                                return {
+                                    type: "line",
+                                    shape: { x1: Fu_coord[0], y1: Fu_coord[1], x2: Fu_coord2[0], y2: Fu_coord2[1] },
+                                    style: {
+                                        stroke: Fu_color,
+                                        lineWidth: 1.5,
+                                        opacity: 0.9,
+                                        lineCap: "round"
+                                    }
+                                };
+                            }
+                        }
+                    ]
+                });
+            })
+            .catch(function (Fu_err) {
+                console.error("风场数据加载失败", Fu_err);
+                document.getElementById("Fu_windChart").innerHTML = "<p style='color:#fff;padding:40px;text-align:center;'>风场数据加载失败，请确认 winds.json 已放在 cdn/data-gl/asset/data/ 下</p>";
+            });
+
+        window.addEventListener("resize", function () { Fu_chart.resize(); });
+    })();
+    </script>
+</body>
+</html>
