@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>18-4 ECharts · 3D 地球等值线动画 + 自定义风场 · 傅若涵</title>
-    <!-- ECharts + GL + D3 依赖 -->
     <script src="./cdn/echarts.min.js"></script>
     <script src="./cdn/echarts-gl.min.js"></script>
     <script src="./cdn/d3-array.min.js"></script>
@@ -42,8 +41,11 @@
             padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid #eee;
         }
         .Fu_chartBox .Fu_desc { font-size: 12px; color: #555; margin-bottom: 10px; line-height: 1.6; }
-        .Fu_chart { width: 100%; height: 560px; background: #000; border-radius: 3px; }
-        .Fu_chartBox .Fu_loading { color: #8a8a8a; font-size: 12px; padding: 40px; text-align: center; }
+        .Fu_chart { width: 100%; height: 560px; background: #000; border-radius: 3px; overflow: hidden; }
+        .Fu_chartBox .Fu_loading, .Fu_chartBox .Fu_err {
+            color: #999; font-size: 12px; padding: 60px 20px; text-align: center; line-height: 2;
+        }
+        .Fu_chartBox .Fu_err { color: #c0101a; }
 
         .Fu_footer { text-align: center; margin-top: 42px; padding-top: 18px; border-top: 1px solid #e0e0e0; font-size: 11px; letter-spacing: 2px; color: #8a8a8a; animation: Fu_fadeUp 0.85s ease both; }
         @keyframes Fu_fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
@@ -60,14 +62,14 @@
         <main class="Fu_pair">
             <section class="Fu_chartBox">
                 <h2>图① · 3D 地球等值线动画</h2>
-                <p class="Fu_desc">d3-contour 从深度贴图生成等值线 SVG path，离屏 canvas 重绘，贴到 globe layers blend emission；阈值随时间脉动产生动画。</p>
-                <div id="Fu_globeChart" class="Fu_chart"><div class="Fu_loading">正在加载深度贴图 + 生成等值线…</div></div>
+                <p class="Fu_desc">d3-contour 从深度贴图生成等值线 path，离屏 canvas 重绘，贴到 globe layers blend emission；阈值随时间脉动产生动画。</p>
+                <div id="Fu_globeChart" class="Fu_chart"><div class="Fu_loading">加载中…</div></div>
             </section>
 
             <section class="Fu_chartBox">
                 <h2>图② · 自定义风场 Custom Series</h2>
-                <p class="Fu_desc">fetch 加载 winds.json（240×121 网格），每条风矢用 globe 坐标系下的短线段绘制，visualMap 按风速着色。</p>
-                <div id="Fu_windChart" class="Fu_chart"><div class="Fu_loading">正在加载风场数据…</div></div>
+                <p class="Fu_desc">winds.json（240×121 网格）→ 每条风矢画为短线段，visualMap 按风速着色；globe 坐标系下实时旋转观察。</p>
+                <div id="Fu_windChart" class="Fu_chart"><div class="Fu_loading">加载中…</div></div>
             </section>
         </main>
 
@@ -88,7 +90,7 @@
         Fu_el.innerHTML = "";
         const Fu_myChart = echarts.init(Fu_el, null, { renderer: "canvas" });
 
-        // ===== 等值线绘制离屏 canvas =====
+        // 等值线绘制离屏 canvas
         const Fu_contourCanvas = document.createElement("canvas");
         Fu_contourCanvas.width = 4096;
         Fu_contourCanvas.height = 2048;
@@ -97,38 +99,51 @@
         Fu_ctx.strokeStyle = Fu_color;
         Fu_ctx.fillStyle = Fu_color;
 
-        // ===== 加载深度贴图，缩小到 512×256 以便 contour 计算 =====
+        // 兼容 d3.contour (v2 单数) 和 d3.contours (可能的别名)
+        const Fu_contourGen = (d3.contour || d3.contours)();
+
         function Fu_loadImage(url) {
             return new Promise(function (Fu_resolve) {
                 const Fu_img = new Image();
+                // file:// 下去掉 crossOrigin 才能读像素；HTTP 下加上也 OK
+                if (location.protocol !== "file:") Fu_img.crossOrigin = "Anonymous";
                 Fu_img.onload = function () {
-                    const Fu_c = document.createElement("canvas");
-                    Fu_c.width = Fu_img.width / 8;
-                    Fu_c.height = Fu_img.height / 8;
-                    const Fu_c2 = Fu_c.getContext("2d");
-                    Fu_c2.drawImage(Fu_img, 0, 0, Fu_c.width, Fu_c.height);
-                    Fu_resolve(Fu_c2.getImageData(0, 0, Fu_c.width, Fu_c.height));
+                    try {
+                        const Fu_c = document.createElement("canvas");
+                        Fu_c.width = Fu_img.width / 8;
+                        Fu_c.height = Fu_img.height / 8;
+                        const Fu_c2 = Fu_c.getContext("2d");
+                        Fu_c2.drawImage(Fu_img, 0, 0, Fu_c.width, Fu_c.height);
+                        Fu_resolve(Fu_c2.getImageData(0, 0, Fu_c.width, Fu_c.height));
+                    } catch (Fu_e) {
+                        console.error("getImageData 失败：", Fu_e, "(可能是 CORS 问题)");
+                        Fu_resolve(null);
+                    }
                 };
-                Fu_img.onerror = function () { Fu_resolve(null); };
+                Fu_img.onerror = function () {
+                    console.error("图片加载失败：", url);
+                    Fu_resolve(null);
+                };
                 Fu_img.src = url;
-                Fu_img.crossOrigin = "Anonymous";
             });
         }
 
         Fu_loadImage("./cdn/bathymetry_bw_composite_4k.jpg").then(function (Fu_image) {
             if (!Fu_image) {
-                Fu_el.innerHTML = "<p style='color:#fff;padding:40px;text-align:center;'>深度贴图加载失败，请确认 bathymetry_bw_composite_4k.jpg 在 cdn 目录下</p>";
+                Fu_el.innerHTML = "<p class='Fu_err'>深度贴图加载失败<br>请用本地 HTTP 服务器打开（file:// 下 CORS 会拦截）<br>或确认 bathymetry_bw_composite_4k.jpg 在 cdn/ 下</p>";
                 return;
             }
 
-            const Fu_m = Fu_image.height; // 256
-            const Fu_n = Fu_image.width;  // 512
+            const Fu_m = Fu_image.height;  // 256
+            const Fu_n = Fu_image.width;   // 512
             const Fu_values = new Array(Fu_n * Fu_m);
-            const Fu_contours = d3.contours().size([Fu_n, Fu_m]).smooth(true);
+
+            // d3.contour 生成器
+            const Fu_contours = Fu_contourGen.size([Fu_n, Fu_m]).smooth(true);
             const Fu_projection = d3.geoIdentity().scale(Fu_contourCanvas.width / Fu_n);
             const Fu_path = d3.geoPath(Fu_projection, Fu_ctx);
 
-            // 把图像灰度值填入 values 数组（0~1）
+            // 灰度值数组
             for (let Fu_j = 0, Fu_k = 0; Fu_j < Fu_m; ++Fu_j) {
                 for (let Fu_i = 0; Fu_i < Fu_n; ++Fu_i, ++Fu_k) {
                     Fu_values[Fu_k] = Fu_image.data[Fu_k << 2] / 255;
@@ -136,39 +151,37 @@
             }
 
             let Fu_results = [];
+            let Fu_imgZ = null; // 让 redraw 能访问
 
             function Fu_update(Fu_t, Fu_lvls) {
                 Fu_ctx.clearRect(0, 0, Fu_contourCanvas.width, Fu_contourCanvas.height);
                 const Fu_thresholds = [];
                 for (let Fu_i = 0; Fu_i < Fu_lvls; Fu_i++) {
-                    Fu_thresholds.push(((Fu_t + (1 / Fu_lvls) * Fu_i) % 1));
+                    Fu_thresholds.push((Fu_t + (1 / Fu_lvls) * Fu_i) % 1);
                 }
                 Fu_results = Fu_contours.thresholds(Fu_thresholds)(Fu_values);
-                Fu_redraw();
+                Fu_redraw(Fu_lvls); // 把 lvls 传进去！
             }
 
-            function Fu_redraw() {
+            function Fu_redraw(Fu_lvls) {
                 Fu_results.forEach(function (Fu_d, Fu_idx) {
                     Fu_ctx.beginPath();
                     Fu_path(Fu_d);
                     Fu_ctx.globalAlpha = 1;
                     Fu_ctx.stroke();
-                    // 内部几个层级才填色（半透明 glow）
                     if (Fu_idx > (Fu_lvls / 5) * 3) {
                         Fu_ctx.globalAlpha = 0.03;
                         Fu_ctx.fill();
                     }
                 });
-                // 告诉 echarts 这张纹理已变
                 if (Fu_imgZ) Fu_imgZ.dirty();
             }
 
-            // ===== 把离屏 canvas 贴到 globe layers =====
-            // 用 echarts 另建一个内部图表，把离屏 canvas 作为 Image zrender 元素
+            // 把离屏 canvas 作为 zrender Image
             const Fu_contourChart = echarts.init(document.createElement("canvas"), null, {
                 width: 4096, height: 2048
             });
-            const Fu_imgZ = new echarts.graphic.Image({
+            Fu_imgZ = new echarts.graphic.Image({
                 style: {
                     image: Fu_contourCanvas,
                     x: -1, y: -1,
@@ -203,11 +216,8 @@
                 }
             });
 
-            // 初始绘制一次
+            // 初始绘制 + 动画
             Fu_update(Fu_threshold, Fu_levels);
-
-            // d3-timer 驱动动画：threshold 周期脉动
-            let Fu_t0 = performance.now();
             d3.timer(function (Fu_ellapsed) {
                 const Fu_t = (Fu_ellapsed % 10000) / 10000;
                 Fu_update(Fu_t, Fu_levels);
@@ -218,12 +228,24 @@
     })();
 
     // ============================================================
-    // 图②：自定义风场 Custom Series —— globe
+    // 图②：自定义风场 Custom Series —— 官方 custom-wind 实现
     // ============================================================
     (function Fu_windCustom() {
         const Fu_el = document.getElementById("Fu_windChart");
         Fu_el.innerHTML = "";
         const Fu_chart = echarts.init(Fu_el, null, { renderer: "canvas" });
+
+        // shuffle 函数（官方）
+        function Fu_shuffle(Fu_arr) {
+            let Fu_cur = Fu_arr.length, Fu_tmp, Fu_ri;
+            while (Fu_cur) {
+                Fu_ri = Math.floor(Math.random() * Fu_cur--);
+                Fu_tmp = Fu_arr[Fu_cur];
+                Fu_arr[Fu_cur] = Fu_arr[Fu_ri];
+                Fu_arr[Fu_ri] = Fu_tmp;
+            }
+            return Fu_arr;
+        }
 
         Fu_chart.setOption({
             backgroundColor: "#000",
@@ -236,41 +258,47 @@
                 viewControl: { autoRotate: true, autoRotateSpeed: 4, distance: 160, alpha: 25 }
             },
             visualMap: {
-                show: true, left: 24, bottom: 24,
-                min: 0, max: 20,
-                inRange: { color: ["#1a365d", "#3182ce", "#38b2ac", "#ecc94b", "#e53e3e"] },
-                textStyle: { color: "#ccc", fontSize: 11 }, calculable: true
+                left: "center", bottom: 14,
+                min: 0, max: 10,
+                dimension: 4,
+                inRange: {
+                    color: ["#313695", "#4575b4", "#74add1", "#abd9e9", "#e0f3f8",
+                            "#ffffbf", "#fee090", "#fdae61", "#f46d43", "#d73027", "#a50026"]
+                },
+                calculable: true,
+                textStyle: { color: "#ccc" },
+                orient: "horizontal"
             }
         });
 
         fetch("./cdn/data-gl/asset/data/winds.json")
             .then(function (Fu_r) { return Fu_r.json(); })
             .then(function (Fu_windData) {
+                let Fu_maxMag = 0;
+                let Fu_minMag = Infinity;
+                const Fu_data = [];
                 const Fu_windU = Fu_windData.data;
                 const Fu_nx = Fu_windData.nx;
                 const Fu_ny = Fu_windData.ny;
-                const Fu_step = 3;
-                const Fu_data = [];
-                let Fu_maxMag = 0, Fu_minMag = Infinity;
+                let Fu_p = 0;
 
-                for (let Fu_j = 0; Fu_j < Fu_ny; Fu_j += Fu_step) {
-                    for (let Fu_i = 0; Fu_i < Fu_nx; Fu_i += Fu_step) {
-                        const Fu_p = Fu_j * Fu_nx + Fu_i;
+                for (let Fu_j = 0; Fu_j < Fu_ny; Fu_j++) {
+                    for (let Fu_i = 0; Fu_i < Fu_nx; Fu_i++, Fu_p++) {
                         const Fu_vx = Fu_windU[Fu_p][0];
                         const Fu_vy = Fu_windU[Fu_p][1];
                         const Fu_mag = Math.sqrt(Fu_vx * Fu_vx + Fu_vy * Fu_vy);
-                        Fu_maxMag = Math.max(Fu_maxMag, Fu_mag);
-                        Fu_minMag = Math.min(Fu_minMag, Fu_mag);
-                        Fu_data.push({
-                            value: [
-                                (Fu_i / Fu_nx) * 360 - 180,
-                                (Fu_j / Fu_ny) * 180 - 90,
-                                Fu_mag
-                            ],
-                            vx: Fu_vx, vy: Fu_vy, mag: Fu_mag
-                        });
+                        Fu_maxMag = Math.max(Fu_mag, Fu_maxMag);
+                        Fu_minMag = Math.min(Fu_mag, Fu_minMag);
+                        // 官方结构：[lon, lat, vx, vy, mag]
+                        Fu_data.push([
+                            (Fu_i / Fu_nx) * 360 - 180,
+                            (Fu_j / Fu_ny) * 180 - 90,
+                            Fu_vx, Fu_vy, Fu_mag
+                        ]);
                     }
                 }
+
+                Fu_shuffle(Fu_data);
 
                 Fu_chart.setOption({
                     visualMap: { min: Fu_minMag, max: Fu_maxMag },
@@ -278,27 +306,39 @@
                         type: "custom",
                         coordinateSystem: "globe",
                         data: Fu_data,
-                        encode: { value: 2 },
                         renderItem: function (Fu_params, Fu_api) {
-                            const Fu_coord = Fu_api.coord([Fu_params.data.value[0], Fu_params.data.value[1], 0.01]);
-                            const Fu_coord2 = Fu_api.coord([
-                                Fu_params.data.value[0] + Fu_params.data.vx * 0.6,
-                                Fu_params.data.value[1] + Fu_params.data.vy * 0.6,
+                            const Fu_x = Fu_api.value(0);
+                            const Fu_y = Fu_api.value(1);
+                            const Fu_dx = Fu_api.value(2);
+                            const Fu_dy = Fu_api.value(3);
+                            // globe 坐标系把 [lon, lat, altitude] 投射到屏幕
+                            const Fu_start = Fu_api.coord([
+                                Math.max(Fu_x - Fu_dx / 5, -180),
+                                Math.max(Fu_y - Fu_dy / 5, -90),
                                 0.01
                             ]);
-                            const Fu_color = Fu_api.visual("color", Fu_params.data.mag);
+                            const Fu_end = Fu_api.coord([
+                                Math.min(Fu_x + Fu_dx / 5, 180),
+                                Math.min(Fu_y + Fu_dy / 5, 90),
+                                0.01
+                            ]);
                             return {
                                 type: "line",
-                                shape: { x1: Fu_coord[0], y1: Fu_coord[1], x2: Fu_coord2[0], y2: Fu_coord2[1] },
-                                style: { stroke: Fu_color, lineWidth: 1.5, opacity: 0.9, lineCap: "round" }
+                                shape: { x1: Fu_start[0], y1: Fu_start[1], x2: Fu_end[0], y2: Fu_end[1] },
+                                style: {
+                                    lineWidth: 0.6,
+                                    stroke: Fu_api.visual("color"),
+                                    opacity: 0.85
+                                }
                             };
-                        }
+                        },
+                        progressive: 2000
                     }]
                 });
             })
             .catch(function (Fu_err) {
                 console.error("风场数据加载失败", Fu_err);
-                Fu_el.innerHTML = "<p style='color:#fff;padding:40px;text-align:center;'>风场数据加载失败</p>";
+                Fu_el.innerHTML = "<p class='Fu_err'>风场数据加载失败<br>请用本地 HTTP 服务器打开<br>或确认 winds.json 在 cdn/data-gl/asset/data/ 下</p>";
             });
 
         window.addEventListener("resize", function () { Fu_chart.resize(); });
