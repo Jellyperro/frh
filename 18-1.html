@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>18-1 Canvas 粒子动画 · 傅若涵</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; }
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #0a0a0f; color: #e0e0e0;
+        }
+        #Fu_canvas { display: block; cursor: crosshair; }
+
+        .Fu_header {
+            position: fixed; top: 24px; left: 0; right: 0; text-align: center;
+            pointer-events: none; z-index: 10;
+        }
+        .Fu_header h1 {
+            font-size: 13px; font-weight: 500; letter-spacing: 6px; color: rgba(255,255,255,0.45);
+        }
+        .Fu_header .Fu_sub { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,0.25); margin-top: 6px; }
+
+        .Fu_controls {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 10px; z-index: 10;
+        }
+        .Fu_btn {
+            pointer-events: auto; cursor: pointer; font-family: "PingFang SC", sans-serif;
+            font-size: 12px; letter-spacing: 2px; padding: 6px 16px; border-radius: 2px;
+            background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.75);
+            border: 1px solid rgba(255,255,255,0.18);
+            transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        }
+        .Fu_btn:hover { background: rgba(255,255,255,0.18); color: #fff; border-color: rgba(255,255,255,0.45); }
+
+        .Fu_footer {
+            position: fixed; bottom: 24px; right: 28px; font-size: 11px; letter-spacing: 2px;
+            color: rgba(255,255,255,0.25); z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="Fu_canvas"></canvas>
+
+    <div class="Fu_header">
+        <h1>CANVAS · PARTICLE TEXT</h1>
+        <div class="Fu_sub">移动鼠标让粒子散开 · 点击切换文字</div>
+    </div>
+
+    <div class="Fu_controls">
+        <button class="Fu_btn" id="Fu_btnText">切换文字</button>
+        <button class="Fu_btn" id="Fu_btnMode">切换模式</button>
+    </div>
+
+    <div class="Fu_footer">© 2026 傅若涵 · 929</div>
+
+    <script>
+        const canvas = document.getElementById("Fu_canvas");
+        const ctx = canvas.getContext("2d");
+
+        let Fu_W = 0, Fu_H = 0;
+        let Fu_particles = [];
+        let Fu_mouse = { x: -9999, y: -9999, r: 120 };
+        let Fu_textIdx = 0;
+        const Fu_texts = ["傅若涵", "929", "Hello", "CANVAS", "粒子动画"];
+        let Fu_modeIdx = 0;
+        const Fu_modes = ["聚集", "烟花", "漩涡"];
+        let Fu_RAF = null;
+
+        // 颜色池：低饱和深色调（靛蓝主色系 + 墨绿/暗金点缀）
+        const Fu_colors = [
+            "#7b9cc2", // 亮靛蓝
+            "#4a6fa5", // 靛蓝
+            "#2a4a6f", // 深靛蓝
+            "#1a365d", // 更深靛蓝
+            "#0f2137", // 最暗靛蓝
+            "#1f7a5a", // 墨绿点缀
+            "#8b7355", // 暗金点缀
+            "#b0b8c1"  // 冷灰
+        ];
+
+        function Fu_resize() {
+            Fu_W = canvas.width = window.innerWidth * window.devicePixelRatio;
+            Fu_H = canvas.height = window.innerHeight * window.devicePixelRatio;
+            canvas.style.width = window.innerWidth + "px";
+            canvas.style.height = window.innerHeight + "px";
+            ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
+            Fu_W = window.innerWidth;
+            Fu_H = window.innerHeight;
+            Fu_captureText(Fu_texts[Fu_textIdx]);
+        }
+
+        // 用离屏 canvas 描点取像素
+        function Fu_captureText(text) {
+            const off = document.createElement("canvas");
+            const octx = off.getContext("2d");
+            const fontSize = Math.min(Fu_W * 0.18, Fu_H * 0.32, 160);
+            off.width = Fu_W;
+            off.height = Fu_H;
+            octx.fillStyle = "#fff";
+            octx.font = "bold " + fontSize + "px 'PingFang SC','Microsoft YaHei',sans-serif";
+            octx.textAlign = "center";
+            octx.textBaseline = "middle";
+            octx.fillText(text, Fu_W / 2, Fu_H / 2);
+
+            const img = octx.getImageData(0, 0, Fu_W, Fu_H).data;
+            const gap = Math.max(3, Math.floor(fontSize / 38)); // 采样间距
+            const targets = [];
+            for (let y = 0; y < Fu_H; y += gap) {
+                for (let x = 0; x < Fu_W; x += gap) {
+                    const i = (y * Fu_W + x) * 4 + 3;
+                    if (img[i] > 128) targets.push({ x, y });
+                }
+            }
+
+            // 重建粒子（数量不同则新建）
+            if (targets.length !== Fu_particles.length) {
+                Fu_particles = targets.map((t, idx) => {
+                    const angle = Math.random() * Math.PI * 2;
+                    const radius = Math.max(Fu_W, Fu_H) * 0.7;
+                    return {
+                        tx: t.x, ty: t.y,
+                        x: Fu_W / 2 + Math.cos(angle) * radius,
+                        y: Fu_H / 2 + Math.sin(angle) * radius,
+                        vx: 0, vy: 0,
+                        size: 1.6 + Math.random() * 1.4,
+                        color: Fu_colors[idx % Fu_colors.length],
+                        angle: Math.random() * Math.PI * 2,
+                        sp: 0.015 + Math.random() * 0.025
+                    };
+                });
+            } else {
+                // 仅更新目标位置，保留当前运动状态（平滑过渡）
+                Fu_particles.forEach((p, i) => {
+                    p.tx = targets[i].x;
+                    p.ty = targets[i].y;
+                });
+            }
+        }
+
+        function Fu_circleGravity(p) {
+            const dx = p.tx - p.x;
+            const dy = p.ty - p.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > 0.5) {
+                // 弹簧力 + 阻尼
+                p.vx += dx * 0.004;
+                p.vy += dy * 0.004;
+                p.vx *= 0.92;
+                p.vy *= 0.92;
+            }
+            // 鼠标斥力
+            const mdx = p.x - Fu_mouse.x;
+            const mdy = p.y - Fu_mouse.y;
+            const md = Math.sqrt(mdx * mdx + mdy * mdy);
+            if (md < Fu_mouse.r) {
+                const force = (Fu_mouse.r - md) / Fu_mouse.r;
+                p.vx += (mdx / md) * force * 2.2;
+                p.vy += (mdy / md) * force * 2.2;
+            }
+        }
+
+        function Fu_firework(p, t) {
+            // 烟花：到达目标后向外爆开再收回来
+            const dx = p.tx - p.x;
+            const dy = p.ty - p.y;
+            p.angle += p.sp;
+            const wave = Math.sin(p.angle) * 30;
+            const cx = p.tx + Math.cos(p.angle * 0.7) * wave;
+            const cy = p.ty + Math.sin(p.angle * 0.7) * wave;
+            p.vx = (cx - p.x) * 0.1;
+            p.vy = (cy - p.y) * 0.1;
+        }
+
+        function Fu_vortex(p) {
+            const dx = p.tx - p.x;
+            const dy = p.ty - p.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            p.angle += p.sp * 1.2;
+            const tx = p.tx - Math.sin(p.angle) * dist * 0.15;
+            const ty = p.ty + Math.cos(p.angle) * dist * 0.15;
+            p.vx = (tx - p.x) * 0.08;
+            p.vy = (ty - p.y) * 0.08;
+        }
+
+        function Fu_draw() {
+            // 拖尾效果：半透明黑覆盖而非 clear
+            ctx.fillStyle = "rgba(10, 10, 15, 0.18)";
+            ctx.fillRect(0, 0, Fu_W, Fu_H);
+
+            for (const p of Fu_particles) {
+                if (Fu_modeIdx === 0) Fu_circleGravity(p);
+                else if (Fu_modeIdx === 1) Fu_firework(p);
+                else Fu_vortex(p);
+
+                p.x += p.vx;
+                p.y += p.vy;
+
+                // 发光效果
+                ctx.beginPath();
+                ctx.fillStyle = p.color;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = p.color;
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+
+            Fu_RAF = requestAnimationFrame(Fu_draw);
+        }
+
+        // 鼠标
+        window.addEventListener("mousemove", (e) => {
+            Fu_mouse.x = e.clientX;
+            Fu_mouse.y = e.clientY;
+        });
+        window.addEventListener("mouseleave", () => {
+            Fu_mouse.x = -9999; Fu_mouse.y = -9999;
+        });
+        window.addEventListener("resize", Fu_resize);
+
+        document.getElementById("Fu_btnText").addEventListener("click", () => {
+            Fu_textIdx = (Fu_textIdx + 1) % Fu_texts.length;
+            Fu_captureText(Fu_texts[Fu_textIdx]);
+        });
+        document.getElementById("Fu_btnMode").addEventListener("click", () => {
+            Fu_modeIdx = (Fu_modeIdx + 1) % Fu_modes.length;
+        });
+
+        Fu_resize();
+        Fu_draw();
+    </script>
+</body>
+</html>

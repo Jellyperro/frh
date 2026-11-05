@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>18-2 Canvas · 电商系统架构图 · 傅若涵</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+            background: #f4f5f7;
+            color: #1a1a1a;
+            padding: 56px 20px 40px;
+        }
+        .Fu_wrap { max-width: 1280px; margin: 0 auto; }
+
+        .Fu_header { text-align: center; margin-bottom: 30px; animation: Fu_fadeUp 0.7s ease both; }
+        .Fu_badge { display: inline-block; padding: 5px 16px; border-radius: 2px; font-size: 12px; letter-spacing: 4px; color: #fff; background: #1a1a1a; margin-bottom: 18px; }
+        .Fu_header h1 { font-size: 26px; font-weight: 500; letter-spacing: 4px; color: #111; }
+        .Fu_header .Fu_sub { margin-top: 8px; font-size: 13px; color: #8a8a8a; letter-spacing: 2px; }
+
+        .Fu_toolbar {
+            display: flex; justify-content: center; gap: 8px; margin-bottom: 18px; flex-wrap: wrap;
+            animation: Fu_fadeUp 0.75s ease both;
+        }
+        .Fu_btn {
+            font-size: 12px; font-weight: 600; letter-spacing: 2px; padding: 6px 18px;
+            border-radius: 2px; cursor: pointer; border: 1px solid #1a1a1a; background: #fff; color: #1a1a1a;
+            transition: background 0.18s ease, color 0.18s ease;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+        .Fu_btn:hover { background: #1a1a1a; color: #fff; }
+
+        .Fu_canvasBox {
+            background: #fff; border: 1px solid #e8e8e8; border-radius: 4px;
+            padding: 16px; overflow: auto;
+            animation: Fu_fadeUp 0.8s ease both;
+        }
+        #Fu_arch { display: block; margin: 0 auto; }
+
+        .Fu_legend {
+            display: flex; gap: 16px 24px; flex-wrap: wrap; justify-content: center;
+            margin-top: 18px; font-size: 12px; animation: Fu_fadeUp 0.85s ease both;
+        }
+        .Fu_legend .Fu_item { display: flex; align-items: center; gap: 6px; }
+        .Fu_legend .Fu_sw { width: 14px; height: 14px; border-radius: 2px; }
+
+        .Fu_footer { text-align: center; margin-top: 42px; padding-top: 18px; border-top: 1px solid #e8e8e8; font-size: 11px; letter-spacing: 2px; color: #a8a8a8; }
+        @keyframes Fu_fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    </style>
+</head>
+<body>
+    <div class="Fu_wrap">
+        <header class="Fu_header">
+            <div class="Fu_badge">929 · 傅若涵</div>
+            <h1>电商全栈系统架构图</h1>
+            <p class="Fu_sub">Canvas 2D 绘制 · 分层架构 · 数据流向</p>
+        </header>
+
+        <div class="Fu_toolbar">
+            <button class="Fu_btn" id="Fu_btnDownload">下载 PNG</button>
+            <button class="Fu_btn" id="Fu_btnRedraw">重绘</button>
+        </div>
+
+        <div class="Fu_canvasBox">
+            <canvas id="Fu_arch"></canvas>
+        </div>
+
+        <div class="Fu_legend">
+            <div class="Fu_item"><span class="Fu_sw" style="background:#6366f1;"></span>用户端</div>
+            <div class="Fu_item"><span class="Fu_sw" style="background:#0ea5e9;"></span>接入层</div>
+            <div class="Fu_item"><span class="Fu_sw" style="background:#f59e0b;"></span>应用层</div>
+            <div class="Fu_item"><span class="Fu_sw" style="background:#10b981;"></span>数据层</div>
+            <div class="Fu_item"><span class="Fu_sw" style="background:#ef4444;"></span>消息/中间件</div>
+            <div class="Fu_item"><span class="Fu_sw" style="background:#8b5cf6;"></span>基础设施</div>
+        </div>
+
+        <footer class="Fu_footer">© 2026 傅若涵 · 学号 929 · Canvas 系统架构图</footer>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("Fu_arch");
+        const ctx = canvas.getContext("2d");
+        const DPR = window.devicePixelRatio || 1;
+
+        // ====== 配色（低饱和深色调，靛蓝主色系）======
+        const C = {
+            client:   "#2c3e50", clientL: "#e6ecf1",
+            access:   "#34495e", accessL: "#dfe6ed",
+            app:      "#1f6f8b", appL:   "#d4e4e9",
+            data:     "#2d6a4f", dataL:  "#d6e4db",
+            msg:      "#7f5539", msgL:   "#e6dcd4",
+            infra:    "#4a4a4a", infraL: "#e0e0e0",
+            text:     "#1a1a1a",
+            subtext:  "#4a4a4a",
+            arrow:    "#2c3e50",
+            grid:     "#e8ebef",
+            highlight:"#8b6914"
+        };
+
+        // ====== 架构数据 ======
+        // 每层一个或多个模块；x/y/w/h 逻辑坐标（canvas 会 scale）
+        const Fu_layers = [
+            {
+                name: "用户端 Client", color: C.client, light: C.clientL,
+                items: [
+                    { label: "浏览器 Web",    x: 160, y: 40, w: 180, h: 60 },
+                    { label: "iOS / Android",x: 400, y: 40, w: 180, h: 60 },
+                    { label: "小程序",        x: 640, y: 40, w: 180, h: 60 },
+                    { label: "PC 客户端",     x: 880, y: 40, w: 180, h: 60 },
+                ]
+            },
+            {
+                name: "接入层 Access", color: C.access, light: C.accessL,
+                items: [
+                    { label: "CDN\n静态资源加速",  x: 100, y: 160, w: 180, h: 64 },
+                    { label: "DNS\n域名解析",       x: 320, y: 160, w: 140, h: 64 },
+                    { label: "Nginx\n负载均衡",     x: 500, y: 160, w: 180, h: 64 },
+                    { label: "API Gateway\n鉴权 / 限流", x: 720, y: 160, w: 180, h: 64 },
+                    { label: "WAF\n防火墙",          x: 940, y: 160, w: 140, h: 64 },
+                ]
+            },
+            {
+                name: "应用层 Microservices", color: C.app, light: C.appL,
+                items: [
+                    { label: "用户服务\nUser",     x: 80,  y: 300, w: 150, h: 70 },
+                    { label: "商品服务\nProduct",  x: 250, y: 300, w: 150, h: 70 },
+                    { label: "订单服务\nOrder",    x: 420, y: 300, w: 150, h: 70 },
+                    { label: "支付服务\nPayment",  x: 590, y: 300, w: 150, h: 70 },
+                    { label: "库存服务\nStock",    x: 760, y: 300, w: 150, h: 70 },
+                    { label: "搜索服务\nSearch",   x: 930, y: 300, w: 150, h: 70 },
+                ]
+            },
+            {
+                name: "消息 / 中间件", color: C.msg, light: C.msgL,
+                items: [
+                    { label: "Kafka / RabbitMQ\n消息队列", x: 250, y: 420, w: 220, h: 62 },
+                    { label: "Redis\n分布式缓存",        x: 500, y: 420, w: 200, h: 62 },
+                    { label: "ElasticSearch\n全文检索",    x: 740, y: 420, w: 200, h: 62 },
+                ]
+            },
+            {
+                name: "数据层 Storage", color: C.data, light: C.dataL,
+                items: [
+                    { label: "MySQL 主从\n关系型数据库", x: 80,  y: 540, w: 200, h: 70 },
+                    { label: "MongoDB\n文档数据库",     x: 310, y: 540, w: 180, h: 70 },
+                    { label: "ClickHouse\nOLAP 分析",    x: 520, y: 540, w: 180, h: 70 },
+                    { label: "OSS / S3\n对象存储",        x: 730, y: 540, w: 180, h: 70 },
+                    { label: "HBase\nNoSQL",              x: 940, y: 540, w: 140, h: 70 },
+                ]
+            },
+            {
+                name: "基础设施 Infra", color: C.infra, light: C.infraL,
+                items: [
+                    { label: "Docker + K8s\n容器编排",  x: 200, y: 670, w: 220, h: 62 },
+                    { label: "Prometheus + Grafana\n监控告警", x: 480, y: 670, w: 240, h: 62 },
+                    { label: "ELK\n日志中心",            x: 780, y: 670, w: 180, h: 62 },
+                ]
+            }
+        ];
+
+        // ====== 尺寸 ======
+        const LOGIC_W = 1220;
+        const LOGIC_H = 770;
+
+        function Fu_setup() {
+            canvas.width = LOGIC_W * DPR;
+            canvas.height = LOGIC_H * DPR;
+            canvas.style.width = LOGIC_W + "px";
+            canvas.style.height = LOGIC_H + "px";
+            ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        }
+
+        // ====== 绘制工具 ======
+        function Fu_roundRect(x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y,     x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x,     y + h, r);
+            ctx.arcTo(x,     y + h, x,     y,     r);
+            ctx.arcTo(x,     y,     x + w, y,     r);
+            ctx.closePath();
+        }
+
+        function Fu_drawArrow(x1, y1, x2, y2, color) {
+            ctx.save();
+            ctx.strokeStyle = color || C.arrow;
+            ctx.fillStyle = color || C.arrow;
+            ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            // 箭头
+            const angle = Math.atan2(y2 - y1, x2 - x1);
+            const ah = 8;
+            ctx.beginPath();
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 - ah * Math.cos(angle - 0.35), y2 - ah * Math.sin(angle - 0.35));
+            ctx.lineTo(x2 - ah * Math.cos(angle + 0.35), y2 - ah * Math.sin(angle + 0.35));
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function Fu_drawItem(item, layerColor, layerLight) {
+            Fu_roundRect(item.x, item.y, item.w, item.h, 6);
+            ctx.fillStyle = layerLight;
+            ctx.fill();
+            ctx.lineWidth = 1.2;
+            ctx.strokeStyle = layerColor;
+            ctx.stroke();
+
+            // 顶部色条
+            ctx.fillStyle = layerColor;
+            Fu_roundRect(item.x + 1, item.y + 1, item.w - 2, 5, 3);
+            ctx.fill();
+
+            // 文字
+            ctx.fillStyle = C.text;
+            ctx.font = "bold 13px 'PingFang SC','Microsoft YaHei',sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            const lines = item.label.split("\n");
+            if (lines.length === 1) {
+                ctx.fillText(lines[0], item.x + item.w / 2, item.y + item.h / 2);
+            } else {
+                ctx.font = "bold 13px 'PingFang SC','Microsoft YaHei',sans-serif";
+                ctx.fillText(lines[0], item.x + item.w / 2, item.y + item.h / 2 - 10);
+                ctx.font = "11px 'PingFang SC','Microsoft YaHei',sans-serif";
+                ctx.fillStyle = C.subtext;
+                ctx.fillText(lines[1], item.x + item.w / 2, item.y + item.h / 2 + 10);
+            }
+        }
+
+        function Fu_drawLayerBg(layer) {
+            // 层背景色块（淡色带）
+            const xs = layer.items.map(i => i.x).sort((a, b) => a - b);
+            const xe = layer.items.map(i => i.x + i.w).sort((a, b) => b - a);
+            const ys = Math.min(...layer.items.map(i => i.y)) - 22;
+            const ye = Math.max(...layer.items.map(i => i.y + i.h)) + 18;
+            const x1 = Math.max(20, xs[0] - 20);
+            const x2 = Math.min(LOGIC_W - 20, xe[0] + 20);
+
+            ctx.save();
+            Fu_roundRect(x1, ys, x2 - x1, ye - ys, 6);
+            ctx.fillStyle = layer.light;
+            ctx.globalAlpha = 0.45;
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            // 层名
+            ctx.fillStyle = layer.color;
+            ctx.font = "bold 11px 'PingFang SC','Microsoft YaHei',sans-serif";
+            ctx.textAlign = "left";
+            ctx.textBaseline = "top";
+            ctx.fillText(layer.name, x1 + 8, ys + 5);
+            ctx.restore();
+        }
+
+        function Fu_drawAllArrows() {
+            // 1 → 2：用户端 → 接入层（每个 item 中心底部指向下一层中心顶部）
+            Fu_layers[0].items.forEach(a => {
+                Fu_layers[1].items.forEach(b => {
+                    // 只连到最近的 2 个
+                });
+                const b = Fu_layers[1];
+                const bx = a.x + a.w / 2;
+                // 指向接入层中间点
+                const bCenterX = b.items.reduce((s, it) => s + it.x + it.w / 2, 0) / b.items.length;
+                const top = Math.max(...b.items.map(it => it.y)); // 顶部
+                Fu_drawArrow(a.x + a.w / 2, a.y + a.h, bCenterX, b.items[0].y - 2, C.arrow);
+            });
+
+            // 2 → 3：接入层 → 应用层（网关分散到各微服务）
+            const gateways = Fu_layers[1].items.slice(-2); // API Gateway + WAF
+            Fu_layers[2].items.forEach(svc => {
+                gateways.forEach(gw => {
+                    const sx = gw.x + gw.w / 2;
+                    const sy = gw.y + gw.h;
+                    const ex = svc.x + svc.w / 2;
+                    const ey = svc.y - 2;
+                    // 画曲线：先竖再斜
+                    ctx.save();
+                    ctx.strokeStyle = C.arrow;
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([3, 3]);
+                    ctx.beginPath();
+                    ctx.moveTo(sx, sy);
+                    ctx.lineTo(sx, sy + 18);
+                    ctx.lineTo(ex, ey);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    ctx.restore();
+                    // 箭头头
+                    Fu_drawArrow(sx, sy + 18, ex, ey, C.arrow);
+                });
+            });
+
+            // 3 → 4：应用层 → 消息/缓存（双向）
+            Fu_layers[3].items.forEach(mw => {
+                Fu_layers[2].items.forEach(svc => {
+                    // 每个服务连到中间件，但分散开只连一半，以免太密
+                    if ((svc.x + svc.w / 2 + mw.x) % 2 === 0) {
+                        Fu_drawArrow(
+                            svc.x + svc.w / 2, svc.y + svc.h,
+                            mw.x + mw.w / 2, mw.y - 2,
+                            C.msg
+                        );
+                    }
+                });
+            });
+
+            // 4 → 5：中间件 → 数据层
+            Fu_layers[4].items.forEach(db => {
+                Fu_layers[3].items.forEach(mw => {
+                    const mx = mw.x + mw.w / 2;
+                    const dx = db.x + db.w / 2;
+                    // 就近连线
+                    if (Math.abs(mx - dx) < 280) {
+                        Fu_drawArrow(mx, mw.y + mw.h, dx, db.y - 2, C.data);
+                    }
+                });
+            });
+
+            // 3 → 6：应用层 → 基础设施（部署 + 监控）
+            Fu_drawArrow(600, Fu_layers[2].items[0].y + Fu_layers[2].items[0].h, 310, Fu_layers[5].items[0].y - 2, C.infra);
+            Fu_drawArrow(600, Fu_layers[2].items[0].y + Fu_layers[2].items[0].h, 600, Fu_layers[5].items[1].y - 2, C.infra);
+            Fu_drawArrow(600, Fu_layers[2].items[0].y + Fu_layers[2].items[0].h, 870, Fu_layers[5].items[2].y - 2, C.infra);
+        }
+
+        // 动画：高亮箭头流动
+        let Fu_flowIdx = 0;
+        function Fu_animate() {
+            Fu_drawStatic();
+            Fu_flowIdx = (Fu_flowIdx + 1) % 60;
+            // 在 CDN → Nginx → Gateway 主链上画流动粒子
+            const p = Fu_flowIdx / 60;
+            Fu_drawFlowParticle(
+                Fu_layers[0].items[1].x + Fu_layers[0].items[1].w / 2,
+                Fu_layers[0].items[1].y + Fu_layers[0].items[1].h,
+                Fu_layers[1].items[2].x + Fu_layers[1].items[2].w / 2,
+                Fu_layers[1].items[2].y,
+                p, C.client
+            );
+            Fu_drawFlowParticle(
+                Fu_layers[1].items[2].x + Fu_layers[1].items[2].w / 2,
+                Fu_layers[1].items[2].y + Fu_layers[1].items[2].h,
+                Fu_layers[2].items[2].x + Fu_layers[2].items[2].w / 2,
+                Fu_layers[2].items[2].y,
+                (p + 0.3) % 1, C.access
+            );
+            Fu_drawFlowParticle(
+                Fu_layers[2].items[2].x + Fu_layers[2].items[2].w / 2,
+                Fu_layers[2].items[2].y + Fu_layers[2].items[2].h,
+                Fu_layers[3].items[1].x + Fu_layers[3].items[1].w / 2,
+                Fu_layers[3].items[1].y,
+                (p + 0.6) % 1, C.app
+            );
+            requestAnimationFrame(Fu_animate);
+        }
+
+        function Fu_drawFlowParticle(x1, y1, x2, y2, t, color) {
+            const px = x1 + (x2 - x1) * t;
+            const py = y1 + (y2 - y1) * t;
+            ctx.save();
+            ctx.fillStyle = color;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = color;
+            ctx.beginPath();
+            ctx.arc(px, py, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function Fu_drawStatic() {
+            ctx.clearRect(0, 0, LOGIC_W, LOGIC_H);
+
+            // 背景网格
+            ctx.save();
+            ctx.strokeStyle = C.grid;
+            ctx.lineWidth = 0.5;
+            for (let x = 0; x < LOGIC_W; x += 20) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, LOGIC_H); ctx.stroke();
+            }
+            for (let y = 0; y < LOGIC_H; y += 20) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(LOGIC_W, y); ctx.stroke();
+            }
+            ctx.restore();
+
+            // 层背景 + 模块
+            Fu_layers.forEach(layer => {
+                Fu_drawLayerBg(layer);
+                layer.items.forEach(item => Fu_drawItem(item, layer.color, layer.light));
+            });
+
+            // 箭头
+            Fu_drawAllArrows();
+
+            // 标题水印
+            ctx.save();
+            ctx.fillStyle = "rgba(0,0,0,0.06)";
+            ctx.font = "bold 28px 'PingFang SC','Microsoft YaHei',sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("傅若涵 · 电商系统架构", LOGIC_W / 2, LOGIC_H - 18);
+            ctx.restore();
+        }
+
+        // ====== 交互 ======
+        document.getElementById("Fu_btnRedraw").addEventListener("click", () => {
+            Fu_drawStatic();
+        });
+
+        document.getElementById("Fu_btnDownload").addEventListener("click", () => {
+            Fu_drawStatic();
+            const url = canvas.toDataURL("image/png");
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "电商系统架构图_傅若涵.png";
+            a.click();
+        });
+
+        Fu_setup();
+        Fu_animate();
+    </script>
+</body>
+</html>
