@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>18-8 数据大屏 · 智能客服运营监控 · 傅若涵</title>
+    <script src="./cdn/echarts.min.js"></script>
+    <script src="./cdn/echarts-gl.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; min-height: 100vh; background: #050a16; color: #cfe3ff; font-family: "PingFang SC", "Microsoft YaHei", sans-serif; overflow-x: hidden; }
+
+        /* 科技风渐变边框 */
+        .Fu_panel {
+            background: linear-gradient(135deg, rgba(10,30,60,0.7) 0%, rgba(5,15,40,0.85) 100%);
+            border: 1px solid rgba(59,130,246,0.25);
+            border-radius: 4px;
+            position: relative;
+            padding: 10px 12px;
+        }
+        .Fu_panel::before, .Fu_panel::after {
+            content: ""; position: absolute; width: 14px; height: 14px;
+            border: 2px solid #3b82f6;
+        }
+        .Fu_panel::before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+        .Fu_panel::after  { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+
+        .Fu_panel h3 {
+            font-size: 13px; font-weight: 600; letter-spacing: 3px;
+            color: #60a5fa; padding-bottom: 6px; margin-bottom: 6px;
+            border-bottom: 1px solid rgba(59,130,246,0.18);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .Fu_panel h3::before {
+            content: ""; width: 3px; height: 13px; background: linear-gradient(180deg, #3b82f6, #93c5fd);
+        }
+        .Fu_panel .Fu_chart { width: 100%; height: 100%; }
+
+        /* 头部 */
+        .Fu_header {
+            text-align: center; padding: 14px 0 10px; margin-bottom: 12px;
+            background: linear-gradient(180deg, rgba(10,30,80,0.6) 0%, transparent 100%);
+            border-bottom: 1px solid rgba(59,130,246,0.2);
+            position: relative;
+        }
+        .Fu_header h1 {
+            font-size: 28px; font-weight: 500; letter-spacing: 8px;
+            background: linear-gradient(90deg, #60a5fa, #c084fc, #f472b6, #60a5fa);
+            background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+            animation: Fu_headerShine 6s linear infinite;
+        }
+        @keyframes Fu_headerShine { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
+        .Fu_header .Fu_sub { margin-top: 4px; font-size: 12px; color: #4a6a9a; letter-spacing: 4px; }
+        .Fu_header .Fu_time {
+            position: absolute; right: 24px; top: 50%; transform: translateY(-50%);
+            font-size: 13px; color: #93c5fd; font-family: Consolas, monospace; letter-spacing: 2px;
+        }
+        .Fu_header .Fu_logo {
+            position: absolute; left: 24px; top: 50%; transform: translateY(-50%);
+            font-size: 14px; color: #93c5fd; letter-spacing: 3px; font-weight: 600;
+        }
+
+        /* 三列布局 */
+        .Fu_screen {
+            display: grid; grid-template-columns: 1fr 1.8fr 1fr;
+            gap: 14px; padding: 0 14px 20px;
+        }
+
+        /* 左列 */
+        .Fu_colLeft { display: flex; flex-direction: column; gap: 14px; }
+        .Fu_colLeft .Fu_panel:nth-child(1) { height: 220px; }
+        .Fu_colLeft .Fu_panel:nth-child(2) { height: 200px; }
+        .Fu_colLeft .Fu_panel:nth-child(3) { height: 260px; }
+
+        /* 中列 */
+        .Fu_colMid { display: flex; flex-direction: column; gap: 14px; }
+        .Fu_colMid .Fu_panel:nth-child(1) { height: 320px; } /* 3D 中国地图 */
+        .Fu_colMid .Fu_panel:nth-child(2) { height: 280px; } /* 全国对话量柱状 */
+
+        /* 右列 */
+        .Fu_colRight { display: flex; flex-direction: column; gap: 14px; }
+        .Fu_colRight .Fu_panel:nth-child(1) { height: 220px; }
+        .Fu_colRight .Fu_panel:nth-child(2) { height: 200px; }
+        .Fu_colRight .Fu_panel:nth-child(3) { height: 260px; }
+
+        /* 告警列表 */
+        .Fu_alertList { list-style: none; font-size: 12px; }
+        .Fu_alertList li {
+            padding: 6px 8px; margin-bottom: 4px;
+            background: rgba(30,50,90,0.4); border-left: 2px solid #f472b6;
+            display: flex; justify-content: space-between; align-items: center;
+            border-radius: 1px;
+        }
+        .Fu_alertList li.Fu_warn { border-left-color: #fbbf24; }
+        .Fu_alertList li.Fu_info { border-left-color: #60a5fa; }
+        .Fu_alertList .Fu_level { font-size: 10px; padding: 1px 6px; border-radius: 2px; }
+        .Fu_alertList li.Fu_info .Fu_level { background: rgba(96,165,250,0.25); color: #93c5fd; }
+        .Fu_alertList li.Fu_warn .Fu_level { background: rgba(251,191,36,0.25); color: #fcd34d; }
+        .Fu_alertList li.Fu_error .Fu_level { background: rgba(244,114,182,0.25); color: #f9a8d4; }
+        .Fu_alertList .Fu_time { font-family: Consolas, monospace; color: #6088b8; font-size: 10px; }
+
+        /* 数字 */
+        .Fu_kpiRow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .Fu_kpi { text-align: center; padding: 8px 4px; background: rgba(30,50,90,0.4); border-radius: 2px; }
+        .Fu_kpi .Fu_num { font-size: 22px; font-weight: 700; font-family: Consolas, monospace; color: #60a5fa; text-shadow: 0 0 8px rgba(96,165,250,0.4); }
+        .Fu_kpi .Fu_lbl { font-size: 10px; color: #6088b8; margin-top: 2px; letter-spacing: 2px; }
+        .Fu_kpi .Fu_trend { font-size: 10px; margin-top: 2px; }
+        .Fu_kpi .Fu_trend.up { color: #34d399; }
+        .Fu_kpi .Fu_trend.down { color: #f87171; }
+
+        /* 排名 */
+        .Fu_rankList { list-style: none; font-size: 12px; }
+        .Fu_rankList li { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+        .Fu_rankList .Fu_no { width: 18px; height: 18px; line-height: 18px; text-align: center; font-size: 10px; border-radius: 2px; background: rgba(96,165,250,0.2); color: #93c5fd; }
+        .Fu_rankList li:nth-child(1) .Fu_no { background: #fbbf24; color: #1a1a1a; }
+        .Fu_rankList li:nth-child(2) .Fu_no { background: #cbd5e1; color: #1a1a1a; }
+        .Fu_rankList li:nth-child(3) .Fu_no { background: #d97706; color: #1a1a1a; }
+        .Fu_rankList .Fu_name { flex: 1; color: #cfe3ff; }
+        .Fu_rankList .Fu_bar { flex: 1.2; height: 6px; background: rgba(59,130,246,0.15); border-radius: 3px; overflow: hidden; }
+        .Fu_rankList .Fu_bar span { display: block; height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 3px; }
+        .Fu_rankList .Fu_val { width: 50px; text-align: right; font-family: Consolas, monospace; color: #93c5fd; font-size: 11px; }
+
+        @media (max-width: 1200px) {
+            .Fu_screen { grid-template-columns: 1fr; }
+            .Fu_header h1 { font-size: 20px; letter-spacing: 4px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 头部 -->
+    <header class="Fu_header">
+        <div class="Fu_logo">929 · 傅若涵</div>
+        <h1>智能客服运营监控数据大屏</h1>
+        <div class="Fu_sub">INTELLIGENT CUSTOMER SERVICE OPERATION DASHBOARD</div>
+        <div class="Fu_time" id="Fu_time">00:00:00</div>
+    </header>
+
+    <div class="Fu_screen">
+        <!-- ========== 左列 ========== -->
+        <section class="Fu_colLeft">
+            <!-- KPI 概览 + 雷达图 -->
+            <div class="Fu_panel">
+                <h3>核心指标概览</h3>
+                <div class="Fu_kpiRow">
+                    <div class="Fu_kpi"><div class="Fu_num" id="Fu_kpi1">0</div><div class="Fu_lbl">今日对话</div><div class="Fu_trend up">▲ 12.3%</div></div>
+                    <div class="Fu_kpi"><div class="Fu_num" id="Fu_kpi2">0</div><div class="Fu_lbl">意图识别</div><div class="Fu_trend up">▲ 3.1%</div></div>
+                    <div class="Fu_kpi"><div class="Fu_num" id="Fu_kpi3">0</div><div class="Fu_lbl">客户满意</div><div class="Fu_trend down">▼ 0.4%</div></div>
+                </div>
+                <div id="Fu_radarChart" class="Fu_chart" style="height: 120px; margin-top: 8px;"></div>
+            </div>
+
+            <!-- 实时告警 -->
+            <div class="Fu_panel">
+                <h3>实时告警</h3>
+                <ul class="Fu_alertList" id="Fu_alertList">
+                    <li class="Fu_error"><span><span class="Fu_level">严重</span> 北京地区 LLM 响应超时</span><span class="Fu_time">17:22:03</span></li>
+                    <li class="Fu_warn"><span><span class="Fu_level">警告</span> 知识库召回率下降至 78%</span><span class="Fu_time">17:18:47</span></li>
+                    <li class="Fu_info"><span><span class="Fu_level">提示</span> 上海新会话峰值 1280</span><span class="Fu_time">17:15:21</span></li>
+                    <li class="Fu_warn"><span><span class="Fu_level">警告</span> 转人工率上升 2.3%</span><span class="Fu_time">17:10:55</span></li>
+                    <li class="Fu_info"><span><span class="Fu_level">提示</span> FAQ 新增 12 条待审核</span><span class="Fu_time">17:05:12</span></li>
+                </ul>
+            </div>
+
+            <!-- 意图分布饼图 -->
+            <div class="Fu_panel">
+                <h3>意图分布 TOP 8</h3>
+                <div id="Fu_pieChart" class="Fu_chart" style="height: calc(100% - 30px);"></div>
+            </div>
+        </section>
+
+        <!-- ========== 中列 ========== -->
+        <section class="Fu_colMid">
+            <!-- 3D 中国地图 -->
+            <div class="Fu_panel">
+                <h3>全国客服分布 · 3D 中国地图</h3>
+                <div id="Fu_map3D" class="Fu_chart" style="height: calc(100% - 30px);"></div>
+            </div>
+
+            <!-- 全国对话量柱状 -->
+            <div class="Fu_panel">
+                <h3>全国对话量趋势 · 近 7 日</h3>
+                <div id="Fu_barChart" class="Fu_chart" style="height: calc(100% - 30px);"></div>
+            </div>
+        </section>
+
+        <!-- ========== 右列 ========== -->
+        <section class="Fu_colRight">
+            <!-- 省份排名 -->
+            <div class="Fu_panel">
+                <h3>省份对话量 TOP 7</h3>
+                <ul class="Fu_rankList" id="Fu_rankList"></ul>
+            </div>
+
+            <!-- 环形 KPI -->
+            <div class="Fu_panel">
+                <h3>服务健康度</h3>
+                <div id="Fu_gaugeChart" class="Fu_chart" style="height: calc(100% - 30px);"></div>
+            </div>
+
+            <!-- 折线趋势 -->
+            <div class="Fu_panel">
+                <h3>实时并发监控</h3>
+                <div id="Fu_lineChart" class="Fu_chart" style="height: calc(100% - 30px);"></div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+    // ===== 时钟 =====
+    (function Fu_clock() {
+        const Fu_el = document.getElementById("Fu_time");
+        function Fu_tick() {
+            const Fu_d = new Date();
+            const Fu_pad = n => n < 10 ? "0" + n : n;
+            Fu_el.textContent = Fu_d.getFullYear() + "-" + Fu_pad(Fu_d.getMonth() + 1) + "-" + Fu_pad(Fu_d.getDate()) +
+                "  " + Fu_pad(Fu_d.getHours()) + ":" + Fu_pad(Fu_d.getMinutes()) + ":" + Fu_pad(Fu_d.getSeconds());
+        }
+        Fu_tick(); setInterval(Fu_tick, 1000);
+    })();
+
+    // ===== KPI 数字跳动 =====
+    (function Fu_kpi() {
+        const Fu_targets = [128563, 94.6, 92.3];
+        const Fu_els = ["Fu_kpi1", "Fu_kpi2", "Fu_kpi3"];
+        let Fu_t = 0;
+        setInterval(function () {
+            Fu_t += 0.1;
+            Fu_els.forEach(function (Fu_id, Fu_i) {
+                const Fu_el = document.getElementById(Fu_id);
+                const Fu_v = Fu_targets[Fu_i] * (1 + Math.sin(Fu_t + Fu_i) * 0.03);
+                Fu_el.textContent = Fu_i === 0 ? Math.floor(Fu_v).toLocaleString() : Fu_v.toFixed(1) + "%";
+            });
+        }, 1500);
+    })();
+
+    // ===== 省份排名 =====
+    (function Fu_rank() {
+        const Fu_data = [
+            { name: "广东", val: 32850 },
+            { name: "北京", val: 28420 },
+            { name: "上海", val: 25310 },
+            { name: "江苏", val: 21980 },
+            { name: "浙江", val: 19760 },
+            { name: "四川", val: 15430 },
+            { name: "山东", val: 13280 }
+        ];
+        const Fu_max = Fu_data[0].val;
+        const Fu_ul = document.getElementById("Fu_rankList");
+        Fu_ul.innerHTML = Fu_data.map(function (Fu_d, Fu_i) {
+            return "<li><span class='Fu_no'>" + (Fu_i + 1) + "</span>" +
+                   "<span class='Fu_name'>" + Fu_d.name + "</span>" +
+                   "<span class='Fu_bar'><span style='width:" + (Fu_d.val / Fu_max * 100).toFixed(1) + "%'></span></span>" +
+                   "<span class='Fu_val'>" + Fu_d.val.toLocaleString() + "</span></li>";
+        }).join("");
+    })();
+
+    // ===== 图表通用深蓝主题 =====
+    const Fu_theme = {
+        textStyle: { color: "#93c5fd", fontFamily: "PingFang SC, Microsoft YaHei, sans-serif" },
+        title: { textStyle: { color: "#cfe3ff", fontSize: 12 } },
+        grid: { top: 30, left: 40, right: 20, bottom: 30 },
+        tooltip: {
+            backgroundColor: "rgba(10,30,60,0.9)", borderColor: "#3b82f6", borderWidth: 1,
+            textStyle: { color: "#cfe3ff", fontSize: 11 }
+        }
+    };
+
+    // ===== 雷达图（意图识别质量）=====
+    (function Fu_radar() {
+        const Fu_chart = echarts.init(document.getElementById("Fu_radarChart"));
+        Fu_chart.setOption({
+            backgroundColor: "transparent",
+            title: { text: "意图识别质量", left: "center", top: -4, textStyle: { color: "#cfe3ff", fontSize: 11 } },
+            tooltip: Fu_theme.tooltip,
+            radar: {
+                indicator: [
+                    { name: "召回率", max: 100 }, { name: "准确率", max: 100 },
+                    { name: "F1 分", max: 100 }, { name: "转人工率", max: 100 },
+                    { name: "实体抽取", max: 100 }, { name: "槽位填充", max: 100 }
+                ],
+                center: ["50%", "54%"], radius: "78%",
+                axisName: { color: "#6088b8", fontSize: 9 },
+                splitArea: { areaStyle: { color: ["rgba(59,130,246,0.05)", "rgba(59,130,246,0.08)"] } },
+                splitLine: { lineStyle: { color: "rgba(59,130,246,0.2)" } },
+                axisLine: { lineStyle: { color: "rgba(59,130,246,0.2)" } }
+            },
+            series: [{
+                type: "radar", data: [{
+                    value: [92, 88, 90, 15, 86, 84], name: "当前",
+                    areaStyle: { color: "rgba(59,130,246,0.25)" },
+                    lineStyle: { color: "#60a5fa", width: 1.5 },
+                    itemStyle: { color: "#60a5fa" }
+                }]
+            }]
+        });
+        window.addEventListener("resize", function () { Fu_chart.resize(); });
+    })();
+
+    // ===== 意图分布饼图 =====
+    (function Fu_pie() {
+        const Fu_chart = echarts.init(document.getElementById("Fu_pieChart"));
+        Fu_chart.setOption({
+            backgroundColor: "transparent",
+            tooltip: Fu_theme.tooltip,
+            legend: {
+                orient: "vertical", right: 10, top: "middle",
+                textStyle: { color: "#93c5fd", fontSize: 10 }, itemWidth: 8, itemHeight: 8
+            },
+            series: [{
+                type: "pie", radius: ["40%", "72%"], center: ["35%", "50%"],
+                label: { show: false }, labelLine: { show: false },
+                itemStyle: { borderColor: "#050a16", borderWidth: 2 },
+                data: [
+                    { value: 28560, name: "咨询下单", itemStyle: { color: "#3b82f6" } },
+                    { value: 22340, name: "订单查询", itemStyle: { color: "#60a5fa" } },
+                    { value: 18920, name: "退换货", itemStyle: { color: "#93c5fd" } },
+                    { value: 15430, name: "支付问题", itemStyle: { color: "#c084fc" } },
+                    { value: 12680, name: "物流查询", itemStyle: { color: "#f472b6" } },
+                    { value: 9870,  name: "活动咨询", itemStyle: { color: "#fbbf24" } },
+                    { value: 7650,  name: "商品推荐", itemStyle: { color: "#34d399" } },
+                    { value: 5420,  name: "其他",     itemStyle: { color: "#64748b" } }
+                ]
+            }]
+        });
+        window.addEventListener("resize", function () { Fu_chart.resize(); });
+    })();
+
+    // ===== 3D 中国地图 =====
+    (function Fu_map3D() {
+        fetch("./cdn/china.json")
+            .then(function (Fu_r) { return Fu_r.json(); })
+            .then(function (Fu_geo) {
+                echarts.registerMap("china", Fu_geo);
+
+                const Fu_chart = echarts.init(document.getElementById("Fu_map3D"));
+
+                // 模拟各省份数据
+                const Fu_provinceData = Fu_geo.features.map(function (Fu_f) {
+                    const Fu_name = Fu_f.properties.name.replace(/省|市|自治区|特别行政区|壮族|回族|维吾尔/g, "");
+                    return { name: Fu_f.properties.name, value: Math.floor(Math.random() * 40000 + 2000) };
+                });
+
+                Fu_chart.setOption({
+                    backgroundColor: "transparent",
+                    tooltip: {
+                        trigger: "item",
+                        backgroundColor: "rgba(10,30,60,0.9)", borderColor: "#3b82f6", borderWidth: 1,
+                        textStyle: { color: "#cfe3ff", fontSize: 11 },
+                        formatter: function (Fu_p) { return Fu_p.name + "<br/>对话量: " + Fu_p.value.toLocaleString(); }
+                    },
+                    visualMap: {
+                        show: true, left: 24, bottom: 24,
+                        min: 2000, max: 40000,
+                        inRange: { color: ["#0a1a3a", "#1e40af", "#3b82f6", "#60a5fa", "#93c5fd", "#c084fc"] },
+                        textStyle: { color: "#93c5fd", fontSize: 10 }, calculable: true
+                    },
+                    geo3D: {
+                        map: "china",
+                        viewControl: { autoRotate: true, autoRotateSpeed: 4, distance: 120 },
+                        boxWidth: 100, boxDepth: 80,
+                        heightScale: 1.2,
+                        shading: "realistic",
+                        realisticMaterial: { roughness: 0.4, metalness: 0.1 },
+                        light: {
+                            ambient: { intensity: 0.3 },
+                            main: { intensity: 1.0, shadow: false, alpha: 40 }
+                        },
+                        postEffect: { enable: true, SSAO: { enable: true } },
+                        itemStyle: {
+                            color: "#1a3a6a", borderWidth: 1, borderColor: "#3b82f6"
+                        },
+                        label: { show: false }
+                    },
+                    series: [{
+                        type: "scatter3D", coordinateSystem: "geo3D",
+                        symbolSize: 6,
+                        itemStyle: { color: "#fbbf24", emissive: "#fbbf24", emissiveIntensity: 1.2 },
+                        data: [
+                            { name: "北京", value: [116.4, 39.9, 50000] },
+                            { name: "上海", value: [121.5, 31.2, 45000] },
+                            { name: "广州", value: [113.3, 23.1, 42000] },
+                            { name: "深圳", value: [114.0, 22.5, 40000] },
+                            { name: "成都", value: [104.1, 30.7, 28000] },
+                            { name: "杭州", value: [120.2, 30.3, 32000] },
+                            { name: "武汉", value: [114.3, 30.6, 25000] },
+                            { name: "西安", value: [108.9, 34.2, 22000] },
+                            { name: "南京", value: [118.8, 32.0, 26000] }
+                        ],
+                        emphasis: { itemStyle: { color: "#f472b6", emissive: "#f472b6" } }
+                    }]
+                });
+                window.addEventListener("resize", function () { Fu_chart.resize(); });
+            });
+    })();
+
+    // ===== 全国对话量柱状（近 7 日）=====
+    (function Fu_bar() {
+        const Fu_chart = echarts.init(document.getElementById("Fu_barChart"));
+        Fu_chart.setOption({
+            backgroundColor: "transparent",
+            tooltip: Fu_theme.tooltip,
+            grid: { top: 20, left: 50, right: 20, bottom: 30 },
+            legend: { data: ["人工坐席", "AI 对话"], textStyle: { color: "#93c5fd", fontSize: 11 }, right: 10, top: 5 },
+            xAxis: {
+                type: "category", data: ["10-30", "10-31", "11-01", "11-02", "11-03", "11-04", "11-05"],
+                axisLine: { lineStyle: { color: "#3b82f6" } },
+                axisLabel: { color: "#93c5fd", fontSize: 11 }
+            },
+            yAxis: {
+                type: "value",
+                axisLine: { lineStyle: { color: "#3b82f6" } },
+                splitLine: { lineStyle: { color: "rgba(59,130,246,0.1)" } },
+                axisLabel: { color: "#93c5fd", fontSize: 11 }
+            },
+            series: [
+                {
+                    name: "AI 对话", type: "bar", stack: "total",
+                    data: [42000, 45000, 48000, 51000, 49000, 53000, 56000],
+                    itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: "#60a5fa" }, { offset: 1, color: "#1e40af" }
+                    ]), borderRadius: [2, 2, 0, 0] }
+                },
+                {
+                    name: "人工坐席", type: "bar", stack: "total",
+                    data: [8000, 7500, 9000, 8500, 9500, 8000, 7800],
+                    itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: "#f472b6" }, { offset: 1, color: "#831843" }
+                    ]), borderRadius: [2, 2, 0, 0] }
+                }
+            ]
+        });
+        window.addEventListener("resize", function () { Fu_chart.resize(); });
+    })();
+
+    // ===== 环形 Gauge =====
+    (function Fu_gauge() {
+        const Fu_chart = echarts.init(document.getElementById("Fu_gaugeChart"));
+        Fu_chart.setOption({
+            backgroundColor: "transparent",
+            tooltip: Fu_theme.tooltip,
+            series: [
+                {
+                    name: "整体满意度", type: "gauge", radius: "85%", center: ["25%", "55%"],
+                    startAngle: 210, endAngle: -30, min: 0, max: 100,
+                    splitNumber: 10,
+                    axisLine: {
+                        lineStyle: { width: 8, color: [[0.7, "#f472b6"], [0.85, "#fbbf24"], [1, "#34d399"]] }
+                    },
+                    pointer: { itemStyle: { color: "#60a5fa" }, length: "60%", width: 3 },
+                    axisTick: { show: false }, splitLine: { show: false },
+                    axisLabel: { show: false },
+                    title: { show: true, offsetCenter: [0, "78%"], color: "#cfe3ff", fontSize: 11 },
+                    detail: {
+                        valueAnimation: true, offsetCenter: [0, "30%"],
+                        formatter: "{value}%", color: "#60a5fa", fontSize: 22, fontWeight: 700
+                    },
+                    data: [{ value: 92.3, name: "整体满意度" }]
+                },
+                {
+                    name: "LLM 响应", type: "gauge", radius: "85%", center: ["75%", "55%"],
+                    startAngle: 210, endAngle: -30, min: 0, max: 100,
+                    splitNumber: 10,
+                    axisLine: {
+                        lineStyle: { width: 8, color: [[0.6, "#f472b6"], [0.8, "#fbbf24"], [1, "#34d399"]] }
+                    },
+                    pointer: { itemStyle: { color: "#c084fc" }, length: "60%", width: 3 },
+                    axisTick: { show: false }, splitLine: { show: false },
+                    axisLabel: { show: false },
+                    title: { show: true, offsetCenter: [0, "78%"], color: "#cfe3ff", fontSize: 11 },
+                    detail: {
+                        valueAnimation: true, offsetCenter: [0, "30%"],
+                        formatter: "{value}ms", color: "#c084fc", fontSize: 18, fontWeight: 700
+                    },
+                    data: [{ value: 320, name: "平均响应" }]
+                }
+            ]
+        });
+        window.addEventListener("resize", function () { Fu_chart.resize(); });
+    })();
+
+    // ===== 实时并发折线 =====
+    (function Fu_line() {
+        const Fu_chart = echarts.init(document.getElementById("Fu_lineChart"));
+        const Fu_time = [], Fu_dataAI = [], Fu_dataHuman = [];
+        for (let Fu_i = 29; Fu_i >= 0; Fu_i--) {
+            const Fu_t = new Date(Date.now() - Fu_i * 60000);
+            Fu_time.push(Fu_t.toTimeString().substr(0, 5));
+            Fu_dataAI.push(Math.floor(Math.random() * 800 + 400));
+            Fu_dataHuman.push(Math.floor(Math.random() * 120 + 40));
+        }
+        Fu_chart.setOption({
+            backgroundColor: "transparent",
+            tooltip: Fu_theme.tooltip,
+            legend: { data: ["AI 并发", "人工并发"], textStyle: { color: "#93c5fd", fontSize: 11 }, right: 10, top: 0 },
+            grid: { top: 30, left: 45, right: 15, bottom: 25 },
+            xAxis: {
+                type: "category", boundaryGap: false, data: Fu_time,
+                axisLine: { lineStyle: { color: "#3b82f6" } },
+                axisLabel: { color: "#93c5fd", fontSize: 9, interval: 5 }
+            },
+            yAxis: {
+                type: "value",
+                axisLine: { lineStyle: { color: "#3b82f6" } },
+                splitLine: { lineStyle: { color: "rgba(59,130,246,0.1)" } },
+                axisLabel: { color: "#93c5fd", fontSize: 10 }
+            },
+            series: [
+                {
+                    name: "AI 并发", type: "line", smooth: true, data: Fu_dataAI,
+                    symbol: "none", lineStyle: { color: "#60a5fa", width: 2 },
+                    areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: "rgba(96,165,250,0.35)" }, { offset: 1, color: "rgba(96,165,250,0.02)" }
+                    ]) }
+                },
+                {
+                    name: "人工并发", type: "line", smooth: true, data: Fu_dataHuman,
+                    symbol: "none", lineStyle: { color: "#f472b6", width: 2 },
+                    areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: "rgba(244,114,182,0.25)" }, { offset: 1, color: "rgba(244,114,182,0.02)" }
+                    ]) }
+                }
+            ]
+        });
+        window.addEventListener("resize", function () { Fu_chart.resize(); });
+
+        // 模拟实时刷新
+        setInterval(function () {
+            const Fu_newT = new Date().toTimeString().substr(0, 5);
+            Fu_chart.setOption({
+                xAxis: { data: Fu_time.slice(1).concat(Fu_newT) },
+                series: [
+                    { data: Fu_dataAI.slice(1).concat(Math.floor(Math.random() * 800 + 400)) },
+                    { data: Fu_dataHuman.slice(1).concat(Math.floor(Math.random() * 120 + 40)) }
+                ]
+            });
+        }, 3000);
+    })();
+    </script>
+</body>
+</html>

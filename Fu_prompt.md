@@ -286,3 +286,8 @@
 **Model:** DeepSeek-V4.1-Flash
 **Prompt:** 实现18-7.html，实现基于three.js的两个图标，cdn文件下载到cdn目录下
 ---
+
+## 2026-11-05-17-50
+**Model:** DeepSeek-V4.1-Flash
+**Prompt:** 实现18-8.html，实现基于three.js或echarts的数据大屏，大屏要求三列，中间是某种地理信息的图，cdn文件下载到cdn目录下
+---
