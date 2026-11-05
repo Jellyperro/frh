@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>18-6 Mermaid · 智能客服系统流程图 + ER 图 · 傅若涵</title>
+    <script src="./cdn/mermaid.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+            background: #f4f4f4;
+            color: #1a1a1a;
+            padding: 56px 20px 40px;
+        }
+        .Fu_wrap { max-width: 1280px; margin: 0 auto; }
+
+        .Fu_header { text-align: center; margin-bottom: 28px; animation: Fu_fadeUp 0.7s ease both; }
+        .Fu_badge { display: inline-block; padding: 5px 16px; border-radius: 2px; font-size: 12px; letter-spacing: 4px; color: #fff; background: #1a1a1a; margin-bottom: 14px; }
+        .Fu_header h1 { font-size: 26px; font-weight: 500; letter-spacing: 4px; color: #111; }
+        .Fu_header .Fu_sub { margin-top: 6px; font-size: 13px; color: #8a8a8a; letter-spacing: 2px; }
+
+        .Fu_pair {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+            animation: Fu_fadeUp 0.75s ease both;
+        }
+        @media (max-width: 1000px) { .Fu_pair { grid-template-columns: 1fr; } }
+
+        .Fu_chartBox {
+            background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 20px;
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        .Fu_chartBox h2 {
+            font-size: 13px; font-weight: 600; letter-spacing: 2px; color: #8a8a8a;
+            padding-bottom: 10px; margin-bottom: 12px; border-bottom: 1px solid #eee;
+        }
+        .Fu_chartBox .Fu_desc { font-size: 12px; color: #555; margin-bottom: 14px; line-height: 1.6; }
+        .Fu_diagram {
+            background: #fafafa; border: 1px solid #e8e8e8; border-radius: 3px;
+            padding: 14px; min-height: 480px; overflow: auto;
+            display: flex; justify-content: center; align-items: center;
+        }
+        /* Mermaid SVG 内部样式微调 */
+        .Fu_diagram svg { max-width: 100%; height: auto; }
+
+        .Fu_footer { text-align: center; margin-top: 42px; padding-top: 18px; border-top: 1px solid #e0e0e0; font-size: 11px; letter-spacing: 2px; color: #8a8a8a; animation: Fu_fadeUp 0.85s ease both; }
+        @keyframes Fu_fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    </style>
+</head>
+<body>
+    <div class="Fu_wrap">
+        <header class="Fu_header">
+            <div class="Fu_badge">929 · 傅若涵</div>
+            <h1>Mermaid · 智能客服系统架构</h1>
+            <p class="Fu_sub">系统处理流程图 · ER 实体关系图 · mermaid.min.js 本地 CDN</p>
+        </header>
+
+        <main class="Fu_pair">
+            <section class="Fu_chartBox">
+                <h2>图① · 智能客服系统处理流程图</h2>
+                <p class="Fu_desc">用户请求 → 意图识别 → 检索增强 RAG → 大模型生成 → 安全护栏 → 回复；异常分支：低置信度转人工 / 安全拦截 / 反馈闭环。</p>
+                <div class="Fu_diagram">
+                    <pre class="mermaid">
+flowchart TD
+    subgraph 接入层
+        A[用户发起请求<br>Web / APP / 企微] --> B{会话鉴权}
+        B -- Token 无效 --> C[拒绝并返回 401]
+        B -- Token 有效 --> D[对话管理]
+    end
+
+    subgraph 对话理解
+        D --> E[意图识别 Intent]
+        D --> F[实体抽取 NER]
+        D --> G[槽位填充]
+        E --> H{置信度 ≥ 阈值?}
+        H -- 是 --> I[进入 RAG 流程]
+        H -- 否 --> Z[转人工客服]
+    end
+
+    subgraph RAG 检索增强
+        I --> J[查询改写 Rewrite]
+        J --> K[多路召回<br>Vector + BM25]
+        K --> L[重排序 Rerank]
+        L --> M{检索到文档?}
+        M -- 是 --> N[拼装 Prompt<br>上下文 + 系统提示]
+        M -- 否 --> O[纯 LLM 生成<br>无检索增强]
+    end
+
+    subgraph 大模型 & 安全
+        N --> P[LLM 生成回复]
+        O --> P
+        P --> Q{安全护栏检查}
+        Q -- 违规 --> R[返回安全拦截提示]
+        Q -- 合规 --> S[回复用户]
+    end
+
+    subgraph 反馈闭环
+        S --> T{用户反馈?}
+        T -- 👍 满意 --> U[结束会话]
+        T -- 👎 不满意 --> V[记录 Bad Case]
+        V --> W[人工标注 → 知识库 / 模型微调]
+        W --> K
+    end
+
+    subgraph 后台运维
+        X[日志 & Trace] -.-> D
+        X -.-> E
+        X -.-> P
+    end
+
+    classDef user fill:#eef1f6,stroke:#2c3e50,stroke-width:1.2px;
+    classDef gate fill:#e6dcd4,stroke:#7f5539,stroke-width:1.2px;
+    classDef rag fill:#e1ece5,stroke:#1b5e3f,stroke-width:1.2px;
+    classDef llm fill:#e8dfe0,stroke:#5c2426,stroke-width:1.2px;
+    classDef loop fill:#e6e1ec,stroke:#4a3a6b,stroke-width:1.2px;
+    classDef ops fill:#ece2d5,stroke:#7a5533,stroke-width:1.2px;
+
+    class A,D,I,J,K,L,N,O,P,S,U user;
+    class B,H,M,Q,T gate;
+    class E,F,G rag;
+    class R,Z,C llm;
+    class V,W loop;
+    class X ops;
+                    </pre>
+                </div>
+            </section>
+
+            <section class="Fu_chartBox">
+                <h2>图② · 智能客服系统 ER 实体关系图</h2>
+                <p class="Fu_desc">核心实体：用户、会话、消息、知识库文档、FAQ、反馈、人工坐席，及它们之间的外键关联（1:N / N:M）。</p>
+                <div class="Fu_diagram">
+                    <pre class="mermaid">
+erDiagram
+    USER {
+        bigint id PK "用户ID"
+        varchar username "用户名"
+        varchar phone "手机号"
+        varchar email "邮箱"
+        tinyint status "状态 0禁用 1启用"
+        datetime created_at "创建时间"
+    }
+
+    SESSION {
+        bigint id PK "会话ID"
+        bigint user_id FK "→ USER.id"
+        varchar channel "渠道 web/app/wx"
+        varchar intent "当前意图"
+        tinyint status "0进行中 1已结束 2转人工"
+        datetime started_at "开始时间"
+        datetime ended_at "结束时间"
+    }
+
+    MESSAGE {
+        bigint id PK "消息ID"
+        bigint session_id FK "→ SESSION.id"
+        tinyint role "1用户 2机器人 3人工"
+        text content "消息内容"
+        float intent_conf "意图置信度"
+        bigint faq_hit FK "→ FAQ.id"
+        bigint doc_hit FK "→ DOC.id"
+        datetime created_at "发送时间"
+    }
+
+    DOC {
+        bigint id PK "文档ID"
+        varchar title "文档标题"
+        varchar category "分类"
+        text content "正文"
+        varchar url "来源链接"
+        float quality_score "质量分"
+        int version "版本号"
+        datetime updated_at "更新时间"
+    }
+
+    FAQ {
+        bigint id PK "FAQ ID"
+        text question "问题"
+        text answer "标准答案"
+        varchar tag "标签"
+        int hit_count "命中次数"
+        float acc_rate "准确率"
+        tinyint status "0下架 1上架"
+    }
+
+    FEEDBACK {
+        bigint id PK "反馈ID"
+        bigint message_id FK "→ MESSAGE.id"
+        bigint user_id FK "→ USER.id"
+        tinyint rating "评分 1~5"
+        text comment "用户评论"
+        tinyint handled "0未处理 1已处理"
+        datetime created_at "反馈时间"
+    }
+
+    AGENT {
+        bigint id PK "坐席ID"
+        varchar name "姓名"
+        varchar dept "部门"
+        tinyint status "0离线 1忙碌 2空闲"
+        int serving_count "服务中会话数"
+        datetime online_at "上线时间"
+    }
+
+    HUMAN_TICKET {
+        bigint id PK "工单ID"
+        bigint session_id FK "→ SESSION.id"
+        bigint agent_id FK "→ AGENT.id"
+        tinyint priority "1低 2中 3高"
+        tinyint status "0待分配 1处理中 2已解决 3关闭"
+        text description "问题描述"
+        text solution "解决方案"
+        datetime assigned_at "分配时间"
+        datetime resolved_at "解决时间"
+    }
+
+    KNOWLEDGE_DOC {
+        bigint id PK "关联ID"
+        bigint knowledge_base_id FK "→ DOC.id"
+        bigint session_id FK "→ SESSION.id"
+    }
+
+    USER ||--o{ SESSION : "发起"
+    SESSION ||--o{ MESSAGE : "包含"
+    MESSAGE }o--|| FAQ : "命中"
+    MESSAGE }o--|| DOC : "引用"
+    MESSAGE ||--o| FEEDBACK : "收到"
+    USER ||--o{ FEEDBACK : "提交"
+    SESSION ||--o| HUMAN_TICKET : "转人工"
+    AGENT ||--o{ HUMAN_TICKET : "处理"
+    SESSION }o--o{ DOC : "检索"
+                    </pre>
+                </div>
+            </section>
+        </main>
+
+        <footer class="Fu_footer">© 2026 傅若涵 · 学号 929 · Mermaid 智能客服系统 · 流程图 + ER 图</footer>
+    </div>
+
+    <script>
+        // Mermaid 初始化 —— 自定义主题让它和页面黑白灰低饱和风格协调
+        mermaid.initialize({
+            startOnLoad: true,
+            securityLevel: "loose",
+            theme: "base",
+            themeVariables: {
+                fontFamily: '"PingFang SC", "Microsoft YaHei", sans-serif',
+                primaryColor: "#eef1f6",
+                primaryTextColor: "#1a1a1a",
+                primaryBorderColor: "#2c3e50",
+                lineColor: "#555555",
+                secondaryColor: "#e1ece5",
+                tertiaryColor: "#e8dfe0",
+                background: "#fafafa",
+                mainBkg: "#eef1f6",
+                nodeBorder: "#2c3e50",
+                clusterBkg: "#f4f4f4",
+                clusterBorder: "#d0d0d0",
+                titleColor: "#1a1a1a",
+                edgeLabelBackground: "#fafafa",
+                fontSize: "13px"
+            },
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: "basis",
+                padding: 16,
+                nodeSpacing: 40,
+                rankSpacing: 48
+            },
+            er: {
+                useMaxWidth: true,
+                layoutDirection: "LR",
+                entityPadding: 12,
+                fontSize: "12px"
+            }
+        });
+    </script>
+</body>
+</html>
