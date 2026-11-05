@@ -213,13 +213,10 @@
             Fu_t += 0.01;
             // 阵列整体缓慢旋转
             Fu_group.rotation.y = Fu_t * 0.15;
-            // 脉冲波
+            // 脉冲波：用 scale 动画，不重建 geometry
             const Fu_r = (Fu_t * 2) % 18;
             Fu_pulse.scale.setScalar(1 + Fu_r);
             Fu_pulseMat.opacity = Math.max(0, 0.9 - Fu_r * 0.05);
-            Fu_pulseGeo.dispose();
-            Fu_pulseGeo = new THREE.RingGeometry(0.3, 0.5, 64);
-            Fu_pulse.geometry = Fu_pulseGeo;
 
             Fu_controls.update();
             Fu_renderer.render(Fu_scene, Fu_camera);
